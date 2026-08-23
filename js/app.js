@@ -291,6 +291,7 @@ class PcbApp {
         }
 
         this.canvas.clearSearchState();
+        this.canvas.clearRippedPaths();
         this.canvas.setCircuit(this.components, this.nets);
         this.controls.renderNetlist(this.nets, this.routedDataMap);
         this.controls.updateMetrics({
@@ -333,6 +334,10 @@ class PcbApp {
         } else if (step.type === 'conflict_detected') {
             this.controls.setStatus(`Conflict detected on ${step.net.name}! Initiating Rip-Up...`, 'conflict');
         } else if (step.type === 'ripup_performed') {
+            // Track ripped path as dotted historical trace
+            if (step.rippedNet && step.rippedPath) {
+                this.canvas.addRippedPath(step.rippedNet, step.rippedPath);
+            }
             // Update ripped net
             const ripped = this.nets.find(n => n.id === step.rippedNet.id);
             if (ripped) ripped.path = null;
@@ -358,6 +363,13 @@ class PcbApp {
 
         if (summary) {
             summary.executionTimeMs = elapsedMs;
+            if (summary.ripUpHistory) {
+                for (const item of summary.ripUpHistory) {
+                    if (item.rippedNet && item.rippedPath) {
+                        this.canvas.addRippedPath(item.rippedNet, item.rippedPath);
+                    }
+                }
+            }
             this.controls.updateMetrics(summary);
             this.controls.renderNetlist(this.nets, this.routedDataMap);
 

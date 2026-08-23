@@ -4,6 +4,43 @@
 
 import { GRID_COLS, GRID_ROWS, PITCH_MM } from '../core/grid.js';
 
+/**
+ * Component SVG Visual Transformation Configuration
+ * Modify scale, rotation offset (in degrees), and (X, Y) pixel position offsets here!
+ */
+export const COMPONENT_SVG_TRANSFORMS = {
+    battery: {
+        scale: 2.6,              // Scale multiplier relative to grid cell size
+        rotationOffsetDeg: 90,   // Base rotation offset in degrees (-90 for vertical SVG asset)
+        offsetX: 0,               // Local axis offset along pins (pixels)
+        offsetY: 0                // Local axis offset perpendicular to pins (pixels)
+    },
+    resistor: {
+        scale: 1.5,
+        rotationOffsetDeg: -90,
+        offsetX: 0,
+        offsetY: 0
+    },
+    led: {
+        scale: 1.7,
+        rotationOffsetDeg: 0,
+        offsetX: 0,
+        offsetY: -13             // Moves lead tips into pins in local frame
+    },
+    sensor: {
+        scale: 1.5,
+        rotationOffsetDeg: 0,
+        offsetX: 0,
+        offsetY: -5              // Moves lead tips into pins in local frame
+    },
+    switch: {
+        scale: 1,
+        rotationOffsetDeg: 0,
+        offsetX: 0,
+        offsetY: 0
+    }
+};
+
 export class PcbCanvas {
     constructor(canvasElement, grid, options = {}) {
         this.canvas = canvasElement;
@@ -11,7 +48,7 @@ export class PcbCanvas {
         this.grid = grid;
 
         // Visual layout metrics
-        this.margin = 45; // mm ruler margin
+        this.margin = 24;
         this.cols = GRID_COLS;
         this.rows = GRID_ROWS;
         this.pitchMm = PITCH_MM;
@@ -35,17 +72,79 @@ export class PcbCanvas {
         this.activeFrontier = new Set();
         this.activeCurrentNode = null;
         this.activeSolutionPath = [];
-        this.flashConflictCells = [];
+        // Zoom & Pan state
+        this.scale = 1.0;
+        this.panX = 0;
+        this.panY = 0;
+        this.minScale = 0.4;
+        this.maxScale = 5.0;
+        this.isPanning = false;
+        this.panStartX = 0;
+        this.panStartY = 0;
+
+        // SVG Component Assets
+        this.svgImages = {};
+        this._loadSvgAssets();
 
         this._setupCanvasSize();
         this._bindEvents();
         this.render();
     }
 
+    resetView() {
+        this.scale = 1.0;
+        this.panX = 0;
+        this.panY = 0;
+        this.render();
+    }
+
+    addRippedPath(net, path) {
+        if (!path || path.length < 2) return;
+        this.rippedPaths.push({
+            netId: net.id,
+            name: net.name,
+            color: net.color || '#f59e0b',
+            path: [...path]
+        });
+        this.render();
+    }
+
+    clearRippedPaths() {
+        this.rippedPaths = [];
+        this.render();
+    }
+
+    _loadSvgAssets() {
+        const assets = {
+            battery: 'resources/Battery.svg',
+            switch: 'resources/Switch.svg',
+            sensor: 'resources/Sensor.svg',
+            resistor: 'resources/Resistor.svg',
+            led: 'resources/LED.svg'
+        };
+
+        for (const [key, path] of Object.entries(assets)) {
+            const img = new Image();
+            img.src = path;
+            img.onload = () => {
+                this.svgImages[key] = img;
+                this.render();
+            };
+            img.onerror = () => {
+                const fallbackImg = new Image();
+                fallbackImg.src = `resources/${key.charAt(0).toUpperCase() + key.slice(1)} .svg`;
+                fallbackImg.onload = () => {
+                    this.svgImages[key] = fallbackImg;
+                    this.render();
+                };
+            };
+        }
+    }
+
     _setupCanvasSize() {
         const dpr = window.devicePixelRatio || 1;
         const rect = this.canvas.getBoundingClientRect();
-        const displayWidth = rect.width || 750;
+        const displayWidth = rect.width || 800;
         const displayHeight = rect.height || 600;
 
         this.canvas.width = displayWidth * dpr;
@@ -55,13 +154,15 @@ export class PcbCanvas {
         this.width = displayWidth;
         this.height = displayHeight;
 
-        // Calculate cell size in pixels
-        const availableW = this.width - this.margin * 2;
-        const availableH = this.height - this.margin * 2;
+        // Balanced zoom-out default view with comfortable breathing room around the PCB
+        const boardPad = 38;     // Padding from outer pin centers to PCB border
+        const canvasMargin = 38; // Comfortable whitespace around the board
+        const availableW = this.width - (canvasMargin * 2) - (boardPad * 2);
+        const availableH = this.height - (canvasMargin * 2) - (boardPad * 2);
         this.cellSize = Math.min(availableW / (this.cols - 1), availableH / (this.rows - 1));
 
-        this.originX = this.margin + (availableW - (this.cols - 1) * this.cellSize) / 2;
-        this.originY = this.margin + (availableH - (this.rows - 1) * this.cellSize) / 2;
+        this.originX = canvasMargin + boardPad + (availableW - (this.cols - 1) * this.cellSize) / 2;
+        this.originY = canvasMargin + boardPad + (availableH - (this.rows - 1) * this.cellSize) / 2;
     }
 
     resize() {
@@ -144,33 +245,39 @@ export class PcbCanvas {
         const ctx = this.ctx;
         ctx.clearRect(0, 0, this.width, this.height);
 
+        ctx.save();
+        ctx.translate(this.panX, this.panY);
+        ctx.scale(this.scale, this.scale);
+
         this._renderBoardSubstrate(ctx);
-        this._renderRulersAndCoordinates(ctx);
         this._renderGridMatrix(ctx);
-        this._renderCongestionHeatmap(ctx);
+        this._renderRippedPaths(ctx);
         this._renderTraces(ctx);
         this._renderSearchOverlay(ctx);
         this._renderComponents(ctx);
         this._renderPins(ctx);
         this._renderHoverTooltip(ctx);
+
+        ctx.restore();
     }
 
     _renderBoardSubstrate(ctx) {
-        const pcbW = (this.cols - 1) * this.cellSize + 30;
-        const pcbH = (this.rows - 1) * this.cellSize + 30;
-        const pcbX = this.originX - 15;
-        const pcbY = this.originY - 15;
+        const pad = 18;
+        const pcbW = (this.cols - 1) * this.cellSize + pad * 2;
+        const pcbH = (this.rows - 1) * this.cellSize + pad * 2;
+        const pcbX = this.originX - pad;
+        const pcbY = this.originY - pad;
 
-        // PCB Outer Shadow
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-        ctx.shadowBlur = 18;
+        // PCB Outer Soft Drop Shadow on Canvas
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.22)';
+        ctx.shadowBlur = 14;
         ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 8;
+        ctx.shadowOffsetY = 6;
 
-        // Dark matte solder-mask green/obsidian substrate
+        // Classic Emerald Solder Mask Green Substrate
         const bgGrad = ctx.createLinearGradient(pcbX, pcbY, pcbX + pcbW, pcbY + pcbH);
-        bgGrad.addColorStop(0, '#0c2419');
-        bgGrad.addColorStop(1, '#06160f');
+        bgGrad.addColorStop(0, '#188656');
+        bgGrad.addColorStop(1, '#188656');
         ctx.fillStyle = bgGrad;
 
         ctx.beginPath();
@@ -178,14 +285,14 @@ export class PcbCanvas {
         ctx.fill();
         ctx.shadowColor = 'transparent';
 
-        // Board Silkscreen Border
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        // Crisp White Silkscreen Board Border
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
         // Corner mounting holes
-        ctx.fillStyle = '#030805';
-        ctx.strokeStyle = '#c5a059';
+        ctx.fillStyle = '#030a06';
+        ctx.strokeStyle = '#eab308';
         ctx.lineWidth = 2;
         const corners = [
             { x: pcbX + 8, y: pcbY + 8 },
@@ -200,37 +307,15 @@ export class PcbCanvas {
             ctx.stroke();
         }
 
-        // Title silkscreen watermark
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+        // Clean silkscreen watermark
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
         ctx.font = '600 10px monospace';
-        ctx.fillText('PCB AUTOROUTE AI VISUALIZER • 50x40mm 5mm PITCH', pcbX + 16, pcbY + pcbH - 8);
-    }
-
-    _renderRulersAndCoordinates(ctx) {
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '9px monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        // X mm markings
-        for (let x = 0; x < this.cols; x++) {
-            const p = this.gridToPixel(x, 0);
-            ctx.fillText(`${x * this.pitchMm}mm`, p.x, this.originY - 26);
-            ctx.fillText(`X:${x}`, p.x, this.originY - 14);
-        }
-
-        // Y mm markings
-        ctx.textAlign = 'right';
-        for (let y = 0; y < this.rows; y++) {
-            const p = this.gridToPixel(0, y);
-            ctx.fillText(`${y * this.pitchMm}mm`, this.originX - 22, p.y);
-            ctx.fillText(`Y:${y}`, this.originX - 8, p.y);
-        }
+        ctx.fillText('PCB AUTOROUTE AI VISUALIZER', pcbX + 16, pcbY + pcbH - 8);
     }
 
     _renderGridMatrix(ctx) {
-        // Grid lines
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
+        // Subtle grid lines on green PCB
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
         ctx.lineWidth = 1;
 
         for (let x = 0; x < this.cols; x++) {
@@ -260,13 +345,13 @@ export class PcbCanvas {
 
                 if (!occ) {
                     // Empty pad
-                    ctx.fillStyle = '#1e3a2b';
+                    ctx.fillStyle = '#739d8b';
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
                     ctx.fill();
 
                     // Center drill hole
-                    ctx.fillStyle = '#06160f';
+                    ctx.fillStyle = '#188656';
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, 1.8, 0, Math.PI * 2);
                     ctx.fill();
@@ -275,25 +360,48 @@ export class PcbCanvas {
         }
     }
 
-    _renderCongestionHeatmap(ctx) {
-        for (let i = 0; i < this.grid.totalNodes; i++) {
-            const penalty = this.grid.penalties[i];
-            if (penalty > 1.0) {
-                const coord = this.grid.toCoord(i);
-                const p = this.gridToPixel(coord.x, coord.y);
-                const alpha = Math.min(0.7, (penalty - 1.0) * 0.15);
+    _renderRippedPaths(ctx) {
+        if (!this.rippedPaths || this.rippedPaths.length === 0) return;
 
-                ctx.fillStyle = `rgba(239, 68, 68, ${alpha})`;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, this.cellSize * 0.45, 0, Math.PI * 2);
-                ctx.fill();
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
 
-                ctx.fillStyle = '#fca5a5';
-                ctx.font = '8px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(`+${penalty.toFixed(1)}`, p.x, p.y + 12);
+        for (const rip of this.rippedPaths) {
+            if (!rip.path || rip.path.length < 2) continue;
+
+            const color = rip.color || '#f59e0b';
+            const isYellow = this._isYellowOrAmber(color);
+
+            // Ghost trace: Dotted/dashed line in initial net path color
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.setLineDash([5, 5]);
+            // Specifically soften yellow/amber dotted lines further to 0.20
+            ctx.globalAlpha = isYellow ? 0.20 : 0.42;
+
+            ctx.beginPath();
+            const pStart = this.grid.toCoord(rip.path[0]);
+            const pStartPx = this.gridToPixel(pStart.x, pStart.y);
+            ctx.moveTo(pStartPx.x, pStartPx.y);
+
+            for (let i = 1; i < rip.path.length; i++) {
+                const p = this.grid.toCoord(rip.path[i]);
+                const px = this.gridToPixel(p.x, p.y);
+                ctx.lineTo(px.x, px.y);
             }
+            ctx.stroke();
         }
+
+        ctx.restore();
+    }
+
+    _isYellowOrAmber(color) {
+        if (!color) return false;
+        const c = color.toLowerCase();
+        return c.includes('f59e0b') || c.includes('eab308') || c.includes('facc15') || 
+               c.includes('fbbf24') || c.includes('d97706') || c.includes('yellow') || 
+               c.includes('amber') || c.includes('f59') || c.includes('eab');
     }
 
     _renderTraces(ctx) {
@@ -382,6 +490,7 @@ export class PcbCanvas {
             const isSelected = this.selectedComponent === comp;
             const isHovered = this.hoveredComponent === comp;
             const dims = comp.getDimensions();
+            const pins = comp.getPins();
 
             const pTopLeft = this.gridToPixel(comp.x, comp.y);
             const wPx = (dims.w - 1) * this.cellSize + 28;
@@ -389,22 +498,59 @@ export class PcbCanvas {
             const xPx = pTopLeft.x - 14;
             const yPx = pTopLeft.y - 14;
 
-            // Component body box
-            ctx.fillStyle = isSelected ? 'rgba(59, 130, 246, 0.25)' : 'rgba(30, 41, 59, 0.85)';
-            ctx.strokeStyle = isSelected ? '#60a5fa' : (isHovered ? '#facc15' : 'rgba(255, 255, 255, 0.7)');
-            ctx.lineWidth = isSelected ? 2.5 : 1.5;
+            // Selection / Hover highlight box
+            if (isSelected || isHovered) {
+                ctx.save();
+                ctx.fillStyle = isSelected ? 'rgba(59, 130, 246, 0.2)' : 'rgba(250, 204, 21, 0.15)';
+                ctx.strokeStyle = isSelected ? '#3b82f6' : '#facc15';
+                ctx.lineWidth = isSelected ? 2 : 1.5;
+                ctx.setLineDash([4, 3]);
+                ctx.beginPath();
+                ctx.roundRect(xPx - 4, yPx - 4, wPx + 8, hPx + 8, 6);
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+            }
 
-            ctx.beginPath();
-            ctx.roundRect(xPx, yPx, wPx, hPx, 4);
-            ctx.fill();
-            ctx.stroke();
+            const svgImg = this.svgImages[comp.type];
+            if (svgImg && svgImg.complete && svgImg.naturalWidth > 0 && pins.length >= 2) {
+                ctx.save();
+                const p0 = this.gridToPixel(pins[0].x, pins[0].y);
+                const p1 = this.gridToPixel(pins[1].x, pins[1].y);
+                const midX = (p0.x + p1.x) / 2;
+                const midY = (p0.y + p1.y) / 2;
+                const dx = p1.x - p0.x;
+                const dy = p1.y - p0.y;
+                const angle = Math.atan2(dy, dx);
 
-            // Silkscreen designator text
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 9px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(comp.shortName, xPx + wPx / 2, yPx + hPx / 2);
+                const cfg = COMPONENT_SVG_TRANSFORMS[comp.type] || { scale: 1.8, rotationOffsetDeg: -90, offsetX: 0, offsetY: 0 };
+                const rotOffsetRad = ((cfg.rotationOffsetDeg || 0) * Math.PI) / 180;
+
+                ctx.translate(midX, midY);
+                ctx.rotate(angle + rotOffsetRad);
+
+                const drawSize = this.cellSize * (cfg.scale || 1.8);
+                const drawX = -drawSize / 2 + (cfg.offsetX || 0);
+                const drawY = -drawSize / 2 + (cfg.offsetY || 0);
+                ctx.drawImage(svgImg, drawX, drawY, drawSize, drawSize);
+                ctx.restore();
+            } else {
+                // Fallback rectangular body
+                ctx.fillStyle = isSelected ? 'rgba(59, 130, 246, 0.3)' : 'rgba(15, 23, 42, 0.85)';
+                ctx.strokeStyle = isSelected ? '#60a5fa' : (isHovered ? '#facc15' : 'rgba(255, 255, 255, 0.7)');
+                ctx.lineWidth = isSelected ? 2.5 : 1.5;
+
+                ctx.beginPath();
+                ctx.roundRect(xPx, yPx, wPx, hPx, 4);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 9px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(comp.shortName, xPx + wPx / 2, yPx + hPx / 2);
+            }
         }
     }
 
@@ -426,17 +572,23 @@ export class PcbCanvas {
                 ctx.stroke();
 
                 // Drill hole
-                ctx.fillStyle = '#0f172a';
+                ctx.fillStyle = '#0a1a12';
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Pin label text
-                ctx.fillStyle = '#f8fafc';
-                ctx.font = 'bold 8px monospace';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'bottom';
-                ctx.fillText(pin.label, p.x, p.y - 8);
+                // Pin label text (+ or -)
+                if (pin.label) {
+                    ctx.save();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 9px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+                    ctx.shadowBlur = 3;
+                    ctx.fillText(pin.label, p.x, p.y - 8);
+                    ctx.restore();
+                }
             }
         }
     }
@@ -445,7 +597,22 @@ export class PcbCanvas {
         if (!this.hoveredPin) return;
 
         const p = this.gridToPixel(this.hoveredPin.x, this.hoveredPin.y);
-        const text = `${this.hoveredPin.label} (${this.hoveredPin.x * this.pitchMm}mm, ${this.hoveredPin.y * this.pitchMm}mm)`;
+        const friendlyMap = {
+            'B+': 'Battery +',
+            'B-': 'Battery -',
+            'S1-A': 'Switch +',
+            'S1-B': 'Switch -',
+            'S-A': 'Switch +',
+            'S-B': 'Switch -',
+            'L-in': 'Sensor +',
+            'L-out': 'Sensor -',
+            'R-in': 'Resistor 1',
+            'R-out': 'Resistor 2',
+            'D-A': 'LED +',
+            'D-K': 'LED -'
+        };
+        const pinName = friendlyMap[this.hoveredPin.id] || (this.hoveredPin.label ? `Pin ${this.hoveredPin.label}` : 'Pin');
+        const text = `${pinName} (${this.hoveredPin.x * this.pitchMm}mm, ${this.hoveredPin.y * this.pitchMm}mm)`;
         
         ctx.font = '10px sans-serif';
         const textWidth = ctx.measureText(text).width;
@@ -470,7 +637,7 @@ export class PcbCanvas {
     }
 
     _bindEvents() {
-        const getCanvasCoords = (e) => {
+        const getScreenCoords = (e) => {
             const rect = this.canvas.getBoundingClientRect();
             return {
                 x: e.clientX - rect.left,
@@ -478,14 +645,50 @@ export class PcbCanvas {
             };
         };
 
+        const screenToWorld = (screenX, screenY) => {
+            return {
+                x: (screenX - this.panX) / this.scale,
+                y: (screenY - this.panY) / this.scale
+            };
+        };
+
+        const getCanvasCoords = (e) => {
+            const screen = getScreenCoords(e);
+            return screenToWorld(screen.x, screen.y);
+        };
+
+        // Mouse wheel zoom using cursor pointer as origin
+        this.canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+
+            const rect = this.canvas.getBoundingClientRect();
+            const cursorX = e.clientX - rect.left;
+            const cursorY = e.clientY - rect.top;
+
+            // World coordinate under cursor pointer before zoom
+            const worldX = (cursorX - this.panX) / this.scale;
+            const worldY = (cursorY - this.panY) / this.scale;
+
+            // Zoom factor
+            const zoomFactor = e.deltaY < 0 ? 1.15 : (1 / 1.15);
+            const newScale = Math.max(this.minScale, Math.min(this.maxScale, this.scale * zoomFactor));
+
+            if (newScale !== this.scale) {
+                this.scale = newScale;
+                // Pin the world coordinate under the cursor pointer
+                this.panX = cursorX - worldX * this.scale;
+                this.panY = cursorY - worldY * this.scale;
+                this.render();
+            }
+        }, { passive: false });
+
         this.canvas.addEventListener('mousedown', (e) => {
-            if (e.button !== 0) return; // Left-click only
             const pos = getCanvasCoords(e);
             const gridCoord = this.pixelToGrid(pos.x, pos.y);
 
             // Check if clicking a pin
             const pin = this._findPinAt(pos.x, pos.y);
-            if (pin) {
+            if (pin && e.button === 0) {
                 if (this.onPinClicked) {
                     this.onPinClicked(pin);
                 }
@@ -494,7 +697,7 @@ export class PcbCanvas {
 
             // Check if clicking a component body for dragging
             const comp = this._findComponentAt(gridCoord.x, gridCoord.y);
-            if (comp) {
+            if (comp && e.button === 0) {
                 this.draggedComponent = comp;
                 this.selectedComponent = comp;
                 this.dragOffset = {
@@ -503,7 +706,15 @@ export class PcbCanvas {
                 };
                 if (this.onSelectionChanged) this.onSelectionChanged(comp);
                 this.render();
-            } else {
+                return;
+            }
+
+            // Middle-click or left-click on empty background: initiate panning
+            if (e.button === 1 || (e.button === 0 && !comp && !pin)) {
+                this.isPanning = true;
+                this.panStartX = e.clientX - this.panX;
+                this.panStartY = e.clientY - this.panY;
+                this.canvas.style.cursor = 'grabbing';
                 this.selectedComponent = null;
                 if (this.onSelectionChanged) this.onSelectionChanged(null);
                 this.render();
@@ -511,6 +722,13 @@ export class PcbCanvas {
         });
 
         window.addEventListener('mousemove', (e) => {
+            if (this.isPanning) {
+                this.panX = e.clientX - this.panStartX;
+                this.panY = e.clientY - this.panStartY;
+                this.render();
+                return;
+            }
+
             const pos = getCanvasCoords(e);
 
             if (this.draggedComponent) {
@@ -542,26 +760,31 @@ export class PcbCanvas {
         });
 
         window.addEventListener('mouseup', () => {
+            if (this.isPanning) {
+                this.isPanning = false;
+                this.canvas.style.cursor = 'crosshair';
+            }
             if (this.draggedComponent) {
                 this.draggedComponent = null;
                 this.render();
             }
         });
 
-        // Double click or right click to rotate component
+        // Double click to rotate component, or double click empty space to reset zoom
         this.canvas.addEventListener('dblclick', (e) => {
             const pos = getCanvasCoords(e);
             const gridCoord = this.pixelToGrid(pos.x, pos.y);
             const comp = this._findComponentAt(gridCoord.x, gridCoord.y);
             if (comp) {
                 comp.rotate();
-                // Ensure in bounds after rotation
                 const dims = comp.getDimensions();
                 comp.x = Math.max(0, Math.min(this.cols - dims.w, comp.x));
                 comp.y = Math.max(0, Math.min(this.rows - dims.h, comp.y));
                 this._syncGridOccupants();
                 if (this.onComponentMoved) this.onComponentMoved(comp);
                 this.render();
+            } else {
+                this.resetView();
             }
         });
 

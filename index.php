@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/tree.css">
     <script src="js/vendor/lucide.min.js"></script>
+    <script src="js/vendor/jszip.min.js"></script>
 </head>
 <body>
 
@@ -130,15 +131,36 @@
                     <i data-lucide="box"></i> Through-Hole Components
                 </div>
                 <div class="legend-grid">
-                    <div class="legend-item"><span class="legend-dot" style="background: #dc2626;"></span> Battery (BT1)</div>
-                    <div class="legend-item"><span class="legend-dot" style="background: #d97706;"></span> Switch (S1)</div>
-                    <div class="legend-item"><span class="legend-dot" style="background: #059669;"></span> Sensor (RLDR)</div>
-                    <div class="legend-item"><span class="legend-dot" style="background: #2563eb;"></span> Resistor (R1)</div>
-                    <div class="legend-item"><span class="legend-dot" style="background: #7c3aed;"></span> LED (D1)</div>
+                    <div class="legend-item"><img src="resources/Battery.svg" class="legend-svg-thumb" alt="Battery"> Battery </div>
+                    <div class="legend-item"><img src="resources/Switch.svg" class="legend-svg-thumb" alt="Switch"> Switch </div>
+                    <div class="legend-item"><img src="resources/Sensor.svg" class="legend-svg-thumb" alt="Sensor"> LDR </div>
+                    <div class="legend-item"><img src="resources/Resistor.svg" class="legend-svg-thumb" alt="Resistor"> Resistor </div>
+                    <div class="legend-item"><img src="resources/LED.svg" class="legend-svg-thumb" alt="LED"> LED </div>
                 </div>
                 <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
                     💡 <em>Tip: Drag to move. Double-click or Right-click to rotate 90°.</em>
                 </p>
+            </div>
+
+            <!-- Export Options Panel (Matching aisearch-v2) -->
+            <div class="panel-section">
+                <div class="section-header">
+                    <i data-lucide="download"></i> Export Options
+                </div>
+                <div class="export-options-grid">
+                    <button id="btn-export-png" class="btn btn-secondary btn-small" title="Export as PNG Image">
+                        <i data-lucide="camera"></i> PNG
+                    </button>
+                    <button id="btn-export-svg" class="btn btn-secondary btn-small" title="Export as SVG Vector">
+                        <i data-lucide="image"></i> SVG
+                    </button>
+                    <button id="btn-export-json" class="btn btn-secondary btn-small" title="Export Board Data as JSON">
+                        <i data-lucide="database"></i> JSON
+                    </button>
+                    <button id="btn-export-csv" class="btn btn-secondary btn-small" title="Export Routing Metrics as CSV">
+                        <i data-lucide="bar-chart"></i> CSV
+                    </button>
+                </div>
             </div>
 
         </aside>
@@ -148,7 +170,7 @@
             <canvas id="pcb-canvas"></canvas>
             <div class="canvas-hint">
                 <i data-lucide="info" style="width: 14px; height: 14px;"></i>
-                <span>Click any component pin after routing to explore its State-Space Tree</span>
+                <span>Scroll to Zoom • Drag to Move • Click pin for Search Tree</span>
             </div>
         </section>
 
@@ -200,6 +222,21 @@
                 </div>
             </div>
 
+            <!-- Algorithm Info Panel (Matching aisearch-v2) -->
+            <div class="panel-section">
+                <div class="section-header">
+                    <i data-lucide="info"></i> Algorithm Info
+                </div>
+                <div id="algorithm-info" class="algorithm-info">
+                    <h4 id="algo-info-name" class="algo-info-title">A* Search</h4>
+                    <p class="algo-info-strategy-row"><strong>Strategy:</strong> <span id="algo-info-strategy">Uses f(n) = g(n) + h(n) to find optimal path efficiently.</span></p>
+                    <div class="algo-info-row"><strong>Complete:</strong> <span id="algo-info-complete">Yes</span></div>
+                    <div class="algo-info-row"><strong>Optimal:</strong> <span id="algo-info-optimal">Yes (with admissible heuristic)</span></div>
+                    <div class="algo-info-row"><strong>Time:</strong> <span id="algo-info-time">O(b^d)</span></div>
+                    <div class="algo-info-row"><strong>Space:</strong> <span id="algo-info-space">O(b^d)</span></div>
+                </div>
+            </div>
+
         </aside>
 
     </main>
@@ -217,10 +254,18 @@
                     </div>
                 </div>
                 <div class="tree-header-controls">
-                    <button id="tree-zoom-in" class="tree-btn-icon" title="Zoom In"><i data-lucide="zoom-in"></i></button>
-                    <button id="tree-zoom-out" class="tree-btn-icon" title="Zoom Out"><i data-lucide="zoom-out"></i></button>
-                    <button id="tree-zoom-reset" class="tree-btn-icon" title="Reset View"><i data-lucide="maximize-2"></i></button>
-                    <button id="tree-modal-close" class="tree-btn-icon" title="Close"><i data-lucide="x"></i></button>
+                    <button id="tree-zoom-in" class="tree-btn-icon" title="Zoom In">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                    </button>
+                    <button id="tree-zoom-out" class="tree-btn-icon" title="Zoom Out">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                    </button>
+                    <button id="tree-zoom-reset" class="tree-btn-icon" title="Reset View">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+                    </button>
+                    <button id="tree-modal-close" class="tree-btn-icon" title="Close">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
                 </div>
             </div>
             
@@ -229,13 +274,9 @@
 
                 <div class="tree-legend-bar">
                     <div class="tree-legend-pill"><span class="pill-dot dot-solution"></span> Solution Path</div>
-                    <div class="tree-legend-pill"><span class="pill-dot dot-visited"></span> Visited / Closed Set</div>
-                    <div class="tree-legend-pill"><span class="pill-dot dot-frontier"></span> Open Set / Frontier</div>
-                    <div class="tree-legend-pill"><span class="pill-dot dot-pruned"></span> Pruned / Cutoff</div>
-                </div>
-
-                <div class="tree-instructions">
-                    <span>🖱 Drag to Pan • Scroll to Zoom</span>
+                    <div class="tree-legend-pill"><span class="pill-dot dot-visited"></span> Visited</div>
+                    <div class="tree-legend-pill"><span class="pill-dot dot-frontier"></span> Unexplored</div>
+                    <div class="tree-legend-pill"><span class="pill-dot dot-pruned"></span> Start Node</div>
                 </div>
             </div>
         </div>

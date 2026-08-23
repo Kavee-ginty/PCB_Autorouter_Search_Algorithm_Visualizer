@@ -50,8 +50,8 @@ function seedDefaultPresets($pdo) {
                     'y' => 1,
                     'orientation' => 'horizontal',
                     'pins' => [
-                        ['id' => 'B+', 'label' => 'B+', 'x' => 1, 'y' => 1, 'type' => 'power'],
-                        ['id' => 'B-', 'label' => 'B-', 'x' => 2, 'y' => 1, 'type' => 'ground']
+                        ['id' => 'B+', 'label' => '+', 'x' => 1, 'y' => 1, 'type' => 'power'],
+                        ['id' => 'B-', 'label' => '-', 'x' => 3, 'y' => 1, 'type' => 'ground']
                     ]
                 ],
                 [
@@ -62,8 +62,8 @@ function seedDefaultPresets($pdo) {
                     'y' => 1,
                     'orientation' => 'horizontal',
                     'pins' => [
-                        ['id' => 'S1-A', 'label' => 'S1-A', 'x' => 5, 'y' => 1, 'type' => 'signal'],
-                        ['id' => 'S1-B', 'label' => 'S1-B', 'x' => 6, 'y' => 1, 'type' => 'signal']
+                        ['id' => 'S1-A', 'label' => '+', 'x' => 5, 'y' => 1, 'type' => 'signal'],
+                        ['id' => 'S1-B', 'label' => '-', 'x' => 6, 'y' => 1, 'type' => 'signal']
                     ]
                 ],
                 [
@@ -74,8 +74,8 @@ function seedDefaultPresets($pdo) {
                     'y' => 3,
                     'orientation' => 'vertical',
                     'pins' => [
-                        ['id' => 'L-in', 'label' => 'L-in', 'x' => 8, 'y' => 3, 'type' => 'signal'],
-                        ['id' => 'L-out', 'label' => 'L-out', 'x' => 8, 'y' => 4, 'type' => 'signal']
+                        ['id' => 'L-in', 'label' => '+', 'x' => 8, 'y' => 3, 'type' => 'signal'],
+                        ['id' => 'L-out', 'label' => '-', 'x' => 8, 'y' => 4, 'type' => 'signal']
                     ]
                 ],
                 [
@@ -86,8 +86,8 @@ function seedDefaultPresets($pdo) {
                     'y' => 6,
                     'orientation' => 'horizontal',
                     'pins' => [
-                        ['id' => 'R-in', 'label' => 'R-in', 'x' => 5, 'y' => 6, 'type' => 'signal'],
-                        ['id' => 'R-out', 'label' => 'R-out', 'x' => 6, 'y' => 6, 'type' => 'signal']
+                        ['id' => 'R-in', 'label' => '', 'x' => 5, 'y' => 6, 'type' => 'signal'],
+                        ['id' => 'R-out', 'label' => '', 'x' => 6, 'y' => 6, 'type' => 'signal']
                     ]
                 ],
                 [
@@ -98,8 +98,8 @@ function seedDefaultPresets($pdo) {
                     'y' => 5,
                     'orientation' => 'vertical',
                     'pins' => [
-                        ['id' => 'D-A', 'label' => 'D-A', 'x' => 1, 'y' => 5, 'type' => 'anode'],
-                        ['id' => 'D-K', 'label' => 'D-K', 'x' => 1, 'y' => 6, 'type' => 'cathode']
+                        ['id' => 'D-A', 'label' => '+', 'x' => 1, 'y' => 5, 'type' => 'anode'],
+                        ['id' => 'D-K', 'label' => '-', 'x' => 1, 'y' => 6, 'type' => 'cathode']
                     ]
                 ]
             ]),
@@ -124,8 +124,8 @@ function seedDefaultPresets($pdo) {
                     'y' => 2,
                     'orientation' => 'horizontal',
                     'pins' => [
-                        ['id' => 'B+', 'label' => 'B+', 'x' => 2, 'y' => 2, 'type' => 'power'],
-                        ['id' => 'B-', 'label' => 'B-', 'x' => 3, 'y' => 2, 'type' => 'ground']
+                        ['id' => 'B+', 'label' => '+', 'x' => 2, 'y' => 2, 'type' => 'power'],
+                        ['id' => 'B-', 'label' => '-', 'x' => 4, 'y' => 2, 'type' => 'ground']
                     ]
                 ],
                 [
@@ -136,8 +136,8 @@ function seedDefaultPresets($pdo) {
                     'y' => 2,
                     'orientation' => 'horizontal',
                     'pins' => [
-                        ['id' => 'S1-A', 'label' => 'S1-A', 'x' => 6, 'y' => 2, 'type' => 'signal'],
-                        ['id' => 'S1-B', 'label' => 'S1-B', 'x' => 7, 'y' => 2, 'type' => 'signal']
+                        ['id' => 'S1-A', 'label' => '+', 'x' => 6, 'y' => 2, 'type' => 'signal'],
+                        ['id' => 'S1-B', 'label' => '-', 'x' => 7, 'y' => 2, 'type' => 'signal']
                     ]
                 ],
                 [
@@ -148,8 +148,8 @@ function seedDefaultPresets($pdo) {
                     'y' => 4,
                     'orientation' => 'vertical',
                     'pins' => [
-                        ['id' => 'L-in', 'label' => 'L-in', 'x' => 6, 'y' => 4, 'type' => 'signal'],
-                        ['id' => 'L-out', 'label' => 'L-out', 'x' => 6, 'y' => 5, 'type' => 'signal']
+                        ['id' => 'L-in', 'label' => '+', 'x' => 6, 'y' => 4, 'type' => 'signal'],
+                        ['id' => 'L-out', 'label' => '-', 'x' => 6, 'y' => 5, 'type' => 'signal']
                     ]
                 ],
                 [
@@ -160,8 +160,8 @@ function seedDefaultPresets($pdo) {
                     'y' => 5,
                     'orientation' => 'horizontal',
                     'pins' => [
-                        ['id' => 'R-in', 'label' => 'R-in', 'x' => 4, 'y' => 5, 'type' => 'signal'],
-                        ['id' => 'R-out', 'label' => 'R-out', 'x' => 5, 'y' => 5, 'type' => 'signal']
+                        ['id' => 'R-in', 'label' => '', 'x' => 4, 'y' => 5, 'type' => 'signal'],
+                        ['id' => 'R-out', 'label' => '', 'x' => 5, 'y' => 5, 'type' => 'signal']
                     ]
                 ],
                 [
@@ -172,8 +172,8 @@ function seedDefaultPresets($pdo) {
                     'y' => 4,
                     'orientation' => 'vertical',
                     'pins' => [
-                        ['id' => 'D-A', 'label' => 'D-A', 'x' => 2, 'y' => 4, 'type' => 'anode'],
-                        ['id' => 'D-K', 'label' => 'D-K', 'x' => 2, 'y' => 5, 'type' => 'cathode']
+                        ['id' => 'D-A', 'label' => '+', 'x' => 2, 'y' => 4, 'type' => 'anode'],
+                        ['id' => 'D-K', 'label' => '-', 'x' => 2, 'y' => 5, 'type' => 'cathode']
                     ]
                 ]
             ]),
@@ -198,8 +198,8 @@ function seedDefaultPresets($pdo) {
                     'y' => 2,
                     'orientation' => 'horizontal',
                     'pins' => [
-                        ['id' => 'B+', 'label' => 'B+', 'x' => 1, 'y' => 2, 'type' => 'power'],
-                        ['id' => 'B-', 'label' => 'B-', 'x' => 2, 'y' => 2, 'type' => 'ground']
+                        ['id' => 'B+', 'label' => '+', 'x' => 1, 'y' => 2, 'type' => 'power'],
+                        ['id' => 'B-', 'label' => '-', 'x' => 3, 'y' => 2, 'type' => 'ground']
                     ]
                 ],
                 [
@@ -210,8 +210,8 @@ function seedDefaultPresets($pdo) {
                     'y' => 5,
                     'orientation' => 'horizontal',
                     'pins' => [
-                        ['id' => 'S1-A', 'label' => 'S1-A', 'x' => 7, 'y' => 5, 'type' => 'signal'],
-                        ['id' => 'S1-B', 'label' => 'S1-B', 'x' => 8, 'y' => 5, 'type' => 'signal']
+                        ['id' => 'S1-A', 'label' => '+', 'x' => 7, 'y' => 5, 'type' => 'signal'],
+                        ['id' => 'S1-B', 'label' => '-', 'x' => 8, 'y' => 5, 'type' => 'signal']
                     ]
                 ],
                 [
@@ -222,8 +222,8 @@ function seedDefaultPresets($pdo) {
                     'y' => 1,
                     'orientation' => 'horizontal',
                     'pins' => [
-                        ['id' => 'L-in', 'label' => 'L-in', 'x' => 7, 'y' => 1, 'type' => 'signal'],
-                        ['id' => 'L-out', 'label' => 'L-out', 'x' => 8, 'y' => 1, 'type' => 'signal']
+                        ['id' => 'L-in', 'label' => '+', 'x' => 7, 'y' => 1, 'type' => 'signal'],
+                        ['id' => 'L-out', 'label' => '-', 'x' => 8, 'y' => 1, 'type' => 'signal']
                     ]
                 ],
                 [
@@ -234,8 +234,8 @@ function seedDefaultPresets($pdo) {
                     'y' => 5,
                     'orientation' => 'horizontal',
                     'pins' => [
-                        ['id' => 'R-in', 'label' => 'R-in', 'x' => 1, 'y' => 5, 'type' => 'signal'],
-                        ['id' => 'R-out', 'label' => 'R-out', 'x' => 2, 'y' => 5, 'type' => 'signal']
+                        ['id' => 'R-in', 'label' => '', 'x' => 1, 'y' => 5, 'type' => 'signal'],
+                        ['id' => 'R-out', 'label' => '', 'x' => 2, 'y' => 5, 'type' => 'signal']
                     ]
                 ],
                 [
@@ -246,8 +246,8 @@ function seedDefaultPresets($pdo) {
                     'y' => 3,
                     'orientation' => 'horizontal',
                     'pins' => [
-                        ['id' => 'D-A', 'label' => 'D-A', 'x' => 4, 'y' => 3, 'type' => 'anode'],
-                        ['id' => 'D-K', 'label' => 'D-K', 'x' => 5, 'y' => 3, 'type' => 'cathode']
+                        ['id' => 'D-A', 'label' => '+', 'x' => 4, 'y' => 3, 'type' => 'anode'],
+                        ['id' => 'D-K', 'label' => '-', 'x' => 5, 'y' => 3, 'type' => 'cathode']
                     ]
                 ]
             ]),

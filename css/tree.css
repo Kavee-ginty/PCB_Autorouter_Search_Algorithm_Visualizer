@@ -1,4 +1,7 @@
-/* State-Space Tree Exploration Modal Styles */
+/* 
+ * tree.css - State-Space Tree Exploration Modal Styles
+ * Styled to match the design system of aisearch-v2/styles.css
+ */
 
 .tree-modal-backdrop {
     position: fixed;
@@ -6,15 +9,15 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(3, 8, 6, 0.85);
-    backdrop-filter: blur(8px);
-    z-index: 1000;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(6px);
+    z-index: 10000;
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.2s ease-out;
 }
 
 .tree-modal-backdrop.visible {
@@ -30,19 +33,31 @@
 .tree-modal-container {
     width: 92vw;
     height: 88vh;
-    background: #091612;
-    border: 1px solid rgba(34, 197, 94, 0.35);
-    border-radius: 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
     display: flex;
     flex-direction: column;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.6);
     overflow: hidden;
+    animation: modalSlideUp 0.3s ease-out;
+}
+
+@keyframes modalSlideUp {
+    from {
+        transform: translateY(16px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .tree-modal-header {
     padding: 14px 20px;
-    background: #0c2419;
-    border-bottom: 1px solid rgba(34, 197, 94, 0.25);
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -55,21 +70,27 @@
 }
 
 .tree-modal-title {
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #f8fafc;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
+.tree-modal-title [data-lucide] {
+    color: var(--accent-primary);
+    width: 20px;
+    height: 20px;
+}
+
 .tree-modal-stats {
-    font-size: 0.78rem;
-    color: #94a3b8;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
 }
 
 .tree-modal-stats strong {
-    color: #38bdf8;
+    color: var(--accent-primary);
 }
 
 .tree-header-controls {
@@ -79,30 +100,55 @@
 }
 
 .tree-btn-icon {
-    width: 32px;
-    height: 32px;
-    background: #132721;
-    border: 1px solid rgba(34, 197, 94, 0.25);
-    border-radius: 6px;
-    color: #cbd5e1;
+    width: 34px;
+    height: 34px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-md);
+    color: #334155;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--transition-fast);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .tree-btn-icon:hover {
-    background: rgba(34, 197, 94, 0.2);
-    color: #ffffff;
-    border-color: #34d399;
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: var(--accent-primary);
+    transform: translateY(-1px);
+}
+
+.tree-btn-icon:active {
+    transform: translateY(0);
+}
+
+.tree-btn-icon svg,
+.tree-btn-icon i,
+.tree-btn-icon [data-lucide] {
+    width: 16px;
+    height: 16px;
+    stroke: #334155;
+    stroke-width: 2.2;
+    display: block;
+}
+
+.tree-btn-icon:hover svg,
+.tree-btn-icon:hover i {
+    stroke: var(--accent-primary);
 }
 
 .tree-modal-body {
     flex: 1;
     position: relative;
     overflow: hidden;
-    background: radial-gradient(circle at center, #0b1e17 0%, #050e0a 100%);
+    background-color: #f8fafc;
+    background-image: 
+        linear-gradient(rgba(226, 232, 240, 0.8) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(226, 232, 240, 0.8) 1px, transparent 1px);
+    background-size: 28px 28px;
     cursor: grab;
 }
 
@@ -119,40 +165,35 @@
     position: absolute;
     bottom: 16px;
     left: 20px;
-    background: rgba(9, 22, 18, 0.9);
-    border: 1px solid rgba(34, 197, 94, 0.25);
-    border-radius: 8px;
-    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-full);
+    padding: 8px 18px;
     display: flex;
     align-items: center;
     gap: 16px;
-    font-size: 0.75rem;
-    backdrop-filter: blur(4px);
+    font-size: 0.78rem;
+    backdrop-filter: blur(8px);
     pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .tree-legend-pill {
     display: flex;
     align-items: center;
     gap: 6px;
+    color: #334155;
+    font-weight: 500;
 }
 
 .pill-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 3px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
 }
 
-.dot-solution { background: #10b981; border: 1px solid #34d399; }
-.dot-visited { background: #06b6d4; border: 1px solid #38bdf8; }
-.dot-frontier { background: #f59e0b; border: 1px solid #fde047; }
-.dot-pruned { background: #ef4444; border: 1px solid #f87171; }
+.dot-solution { background: #10b981; border: 1.5px solid #059669; }
+.dot-visited { background: #ffffff; border: 1.5px solid #1e293b; }
+.dot-frontier { background: #8b5cf6; border: 1.5px solid #6d28d9; }
+.dot-pruned { background: #ef4444; border: 1.5px solid #b91c1c; }
 
-.tree-instructions {
-    position: absolute;
-    top: 14px;
-    right: 20px;
-    font-size: 0.72rem;
-    color: rgba(255, 255, 255, 0.4);
-    pointer-events: none;
-}

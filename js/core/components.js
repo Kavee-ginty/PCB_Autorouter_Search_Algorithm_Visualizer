@@ -8,11 +8,11 @@ export const COMPONENT_TYPES = {
         name: 'Battery Terminal (BT1)',
         shortName: 'BT1',
         color: '#dc2626',
-        width: 2, // 2 grid pitch units (10mm)
+        width: 3, // 3 grid pitch holes (15mm, spanning 3 holes)
         height: 1, // 1 grid pitch unit (5mm)
         pins: [
-            { id: 'B+', label: 'B+', relX: 0, relY: 0, type: 'power', polarity: '+' },
-            { id: 'B-', label: 'B-', relX: 1, relY: 0, type: 'ground', polarity: '-' }
+            { id: 'B+', label: '+', relX: 0, relY: 0, type: 'power', polarity: '+' },
+            { id: 'B-', label: '-', relX: 2, relY: 0, type: 'ground', polarity: '-' }
         ]
     },
     switch: {
@@ -23,8 +23,8 @@ export const COMPONENT_TYPES = {
         width: 2,
         height: 1,
         pins: [
-            { id: 'S1-A', label: 'S1-A', relX: 0, relY: 0, type: 'signal' },
-            { id: 'S1-B', label: 'S1-B', relX: 1, relY: 0, type: 'signal' }
+            { id: 'S1-A', label: '+', relX: 0, relY: 0, type: 'signal' },
+            { id: 'S1-B', label: '-', relX: 1, relY: 0, type: 'signal' }
         ]
     },
     sensor: {
@@ -35,8 +35,8 @@ export const COMPONENT_TYPES = {
         width: 2,
         height: 1,
         pins: [
-            { id: 'L-in', label: 'L-in', relX: 0, relY: 0, type: 'signal' },
-            { id: 'L-out', label: 'L-out', relX: 1, relY: 0, type: 'signal' }
+            { id: 'L-in', label: '+', relX: 0, relY: 0, type: 'signal' },
+            { id: 'L-out', label: '-', relX: 1, relY: 0, type: 'signal' }
         ]
     },
     resistor: {
@@ -47,8 +47,8 @@ export const COMPONENT_TYPES = {
         width: 2,
         height: 1,
         pins: [
-            { id: 'R-in', label: 'R-in', relX: 0, relY: 0, type: 'signal' },
-            { id: 'R-out', label: 'R-out', relX: 1, relY: 0, type: 'signal' }
+            { id: 'R-in', label: '', relX: 0, relY: 0, type: 'signal' },
+            { id: 'R-out', label: '', relX: 1, relY: 0, type: 'signal' }
         ]
     },
     led: {
@@ -59,14 +59,14 @@ export const COMPONENT_TYPES = {
         width: 2,
         height: 1,
         pins: [
-            { id: 'D-A', label: 'D-A', relX: 0, relY: 0, type: 'anode', polarity: '+' },
-            { id: 'D-K', label: 'D-K', relX: 1, relY: 0, type: 'cathode', polarity: '-' }
+            { id: 'D-A', label: '+', relX: 0, relY: 0, type: 'anode', polarity: '+' },
+            { id: 'D-K', label: '-', relX: 1, relY: 0, type: 'cathode', polarity: '-' }
         ]
     }
 };
 
 export class ComponentInstance {
-    constructor(id, typeKey, x = 0, y = 0, orientation = 'horizontal') {
+    constructor(id, typeKey, x = 0, y = 0, orientation = 0) {
         const def = COMPONENT_TYPES[typeKey];
         if (!def) throw new Error(`Unknown component type: ${typeKey}`);
 
@@ -77,12 +77,38 @@ export class ComponentInstance {
         this.color = def.color;
         this.x = x;
         this.y = y;
-        this.orientation = orientation; // 'horizontal' or 'vertical'
+        
+        // Parse rotation angle: supports 0, 90, 180, 270 or legacy 'horizontal' / 'vertical'
+        if (orientation === 'vertical' || orientation === 90 || orientation === '90') {
+            this.rotation = 90;
+        } else if (orientation === 180 || orientation === '180') {
+            this.rotation = 180;
+        } else if (orientation === 270 || orientation === '270') {
+            this.rotation = 270;
+        } else {
+            this.rotation = 0;
+        }
         this.definition = def;
     }
 
+    get orientation() {
+        return (this.rotation === 90 || this.rotation === 270) ? 'vertical' : 'horizontal';
+    }
+
+    set orientation(val) {
+        if (typeof val === 'number') {
+            this.rotation = ((val % 360) + 360) % 360;
+        } else if (val === 'vertical') {
+            this.rotation = 90;
+        } else if (val === 'horizontal') {
+            this.rotation = 0;
+        } else if (!isNaN(parseInt(val, 10))) {
+            this.rotation = parseInt(val, 10);
+        }
+    }
+
     getDimensions() {
-        if (this.orientation === 'horizontal') {
+        if (this.rotation === 0 || this.rotation === 180) {
             return { w: this.definition.width, h: this.definition.height };
         } else {
             return { w: this.definition.height, h: this.definition.width };
@@ -90,13 +116,22 @@ export class ComponentInstance {
     }
 
     getPins() {
+        const wSteps = this.definition.width - 1;
+        const hSteps = this.definition.height - 1;
+
         return this.definition.pins.map(p => {
             let px = this.x + p.relX;
             let py = this.y + p.relY;
 
-            if (this.orientation === 'vertical') {
-                px = this.x + p.relY;
+            if (this.rotation === 90) {
+                px = this.x + (hSteps - p.relY);
                 py = this.y + p.relX;
+            } else if (this.rotation === 180) {
+                px = this.x + (wSteps - p.relX);
+                py = this.y + (hSteps - p.relY);
+            } else if (this.rotation === 270) {
+                px = this.x + p.relY;
+                py = this.y + (wSteps - p.relX);
             }
 
             return {
@@ -137,7 +172,7 @@ export class ComponentInstance {
     }
 
     rotate() {
-        this.orientation = this.orientation === 'horizontal' ? 'vertical' : 'horizontal';
+        this.rotation = (this.rotation + 90) % 360;
     }
 
     toJSON() {
@@ -147,7 +182,7 @@ export class ComponentInstance {
             name: this.name,
             x: this.x,
             y: this.y,
-            orientation: this.orientation,
+            orientation: this.rotation,
             pins: this.getPins()
         };
     }
