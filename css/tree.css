@@ -1,0 +1,158 @@
+/* State-Space Tree Exploration Modal Styles */
+
+.tree-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(3, 8, 6, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.tree-modal-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.tree-modal-backdrop.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.tree-modal-container {
+    width: 92vw;
+    height: 88vh;
+    background: #091612;
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+}
+
+.tree-modal-header {
+    padding: 14px 20px;
+    background: #0c2419;
+    border-bottom: 1px solid rgba(34, 197, 94, 0.25);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tree-header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tree-modal-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tree-modal-stats {
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
+.tree-modal-stats strong {
+    color: #38bdf8;
+}
+
+.tree-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tree-btn-icon {
+    width: 32px;
+    height: 32px;
+    background: #132721;
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    border-radius: 6px;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tree-btn-icon:hover {
+    background: rgba(34, 197, 94, 0.2);
+    color: #ffffff;
+    border-color: #34d399;
+}
+
+.tree-modal-body {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(circle at center, #0b1e17 0%, #050e0a 100%);
+    cursor: grab;
+}
+
+.tree-modal-body:active {
+    cursor: grabbing;
+}
+
+#tree-svg-container {
+    width: 100%;
+    height: 100%;
+}
+
+.tree-legend-bar {
+    position: absolute;
+    bottom: 16px;
+    left: 20px;
+    background: rgba(9, 22, 18, 0.9);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    border-radius: 8px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 0.75rem;
+    backdrop-filter: blur(4px);
+    pointer-events: none;
+}
+
+.tree-legend-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pill-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
+
+.dot-solution { background: #10b981; border: 1px solid #34d399; }
+.dot-visited { background: #06b6d4; border: 1px solid #38bdf8; }
+.dot-frontier { background: #f59e0b; border: 1px solid #fde047; }
+.dot-pruned { background: #ef4444; border: 1px solid #f87171; }
+
+.tree-instructions {
+    position: absolute;
+    top: 14px;
+    right: 20px;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.4);
+    pointer-events: none;
+}

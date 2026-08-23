@@ -1,0 +1,3 @@
+@echo off
+echo Starting PCB AutoRoute AI Visualizer on http://localhost:8000...
+php -S localhost:8000

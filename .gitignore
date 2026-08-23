@@ -1,0 +1,25 @@
+# Dependencies & Build artifacts
+.dist/
+graphify-out/
+node_modules/
+vendor/bundle/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.spec
+build/
+dist/
+
+# Databases & local data
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
