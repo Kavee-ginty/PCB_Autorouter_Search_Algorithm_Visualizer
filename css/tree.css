@@ -102,11 +102,13 @@
 .tree-btn-icon {
     width: 34px;
     height: 34px;
+    padding: 0;
+    flex-shrink: 0;
     background: #ffffff;
     border: 1px solid #cbd5e1;
     border-radius: var(--radius-md);
     color: #334155;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -130,13 +132,15 @@
 .tree-btn-icon [data-lucide] {
     width: 16px;
     height: 16px;
-    stroke: #334155;
+    stroke: currentColor;
     stroke-width: 2.2;
     display: block;
+    pointer-events: none;
 }
 
 .tree-btn-icon:hover svg,
-.tree-btn-icon:hover i {
+.tree-btn-icon:hover i,
+.tree-btn-icon:hover [data-lucide] {
     stroke: var(--accent-primary);
 }
 

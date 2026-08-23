@@ -1,5 +1,5 @@
 /**
- * app.js - Main Application Orchestrator for PCB AutoRoute AI Visualizer
+ * app.js - Main Application Orchestrator for PCB AutoRouting Visualizer
  */
 
 import { PcbGrid, GRID_COLS, GRID_ROWS, PITCH_MM } from './core/grid.js';
@@ -43,7 +43,7 @@ class PcbApp {
             onSelectionChanged: (comp) => this.onSelectionChanged(comp)
         });
 
-        this.treeModal = new StateSpaceTreeModal();
+        this.treeModal = new StateSpaceTreeModal(this);
         this.controls = new PcbControls(this);
 
         this.init();

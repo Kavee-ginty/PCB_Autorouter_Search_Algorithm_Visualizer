@@ -342,7 +342,7 @@ export class PcbCanvas {
         // Clean silkscreen watermark
         ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
         ctx.font = '600 10px monospace';
-        ctx.fillText('PCB AUTOROUTE AI VISUALIZER', pcbX + 16, pcbY + pcbH - 8);
+        ctx.fillText('PCB AutoRouting Visualizer', pcbX + 16, pcbY + pcbH - 8);
     }
 
     _renderGridMatrix(ctx) {
@@ -881,7 +881,7 @@ export class PcbCanvas {
             'D-K': 'LED -'
         };
         const pinName = friendlyMap[this.hoveredPin.id] || (this.hoveredPin.label ? `Pin ${this.hoveredPin.label}` : 'Pin');
-        const text = `${pinName} (${this.hoveredPin.x * this.pitchMm}mm, ${this.hoveredPin.y * this.pitchMm}mm)`;
+        const text = pinName;
         
         ctx.font = '10px sans-serif';
         const textWidth = ctx.measureText(text).width;

@@ -4,7 +4,8 @@
  */
 
 export class StateSpaceTreeModal {
-    constructor() {
+    constructor(app = null) {
+        this.app = app;
         this.modalElement = document.getElementById('tree-modal');
         this.containerElement = document.getElementById('tree-svg-container');
         this.titleElement = document.getElementById('tree-modal-title');
@@ -21,6 +22,28 @@ export class StateSpaceTreeModal {
         this.startPan = { x: 0, y: 0 };
 
         this._bindEvents();
+    }
+
+    _getPinName(pinId, fallbackPin = null) {
+        if (this.app?.controls?.getFriendlyPinName) {
+            const friendly = this.app.controls.getFriendlyPinName(pinId);
+            if (friendly) return friendly;
+        }
+        const friendlyMap = {
+            'B+': 'Battery +',
+            'B-': 'Battery -',
+            'S1-A': 'Switch +',
+            'S1-B': 'Switch -',
+            'S-A': 'Switch +',
+            'S-B': 'Switch -',
+            'L-in': 'Sensor +',
+            'L-out': 'Sensor -',
+            'R-in': 'Resistor 1',
+            'R-out': 'Resistor 2',
+            'D-A': 'LED +',
+            'D-K': 'LED -'
+        };
+        return friendlyMap[pinId] || fallbackPin?.label || fallbackPin?.id || pinId || 'Pin';
     }
 
     _bindEvents() {
@@ -91,23 +114,6 @@ export class StateSpaceTreeModal {
                 this.autoFitTree();
             });
         }
-
-        // Zoom buttons
-        const btnZoomIn = document.getElementById('tree-zoom-in');
-        const btnZoomOut = document.getElementById('tree-zoom-out');
-        const btnZoomReset = document.getElementById('tree-zoom-reset');
-
-        if (btnZoomIn) btnZoomIn.addEventListener('click', () => {
-            this.zoomLevel = Math.min(4.0, this.zoomLevel * 1.25);
-            this._applyTransform();
-        });
-        if (btnZoomOut) btnZoomOut.addEventListener('click', () => {
-            this.zoomLevel = Math.max(0.15, this.zoomLevel * 0.8);
-            this._applyTransform();
-        });
-        if (btnZoomReset) btnZoomReset.addEventListener('click', () => {
-            this.autoFitTree();
-        });
     }
 
     _applyTransform() {
@@ -146,9 +152,16 @@ export class StateSpaceTreeModal {
         this.currentNet = net;
         this.currentTree = treeData;
 
-        const pinName = pin?.label || pin?.id || 'Pin';
-        const netName = net ? net.name : 'Selected Route';
-        this.titleElement.textContent = `State-Space Exploration Tree • ${pinName} (${netName}) [${algorithmName}]`;
+        let titleText = 'Search Tree';
+        if (net && net.source && net.target) {
+            const srcName = this._getPinName(net.source, pin);
+            const tgtName = this._getPinName(net.target);
+            titleText = `${srcName} → ${tgtName}`;
+        } else if (pin) {
+            titleText = this._getPinName(pin.id, pin);
+        }
+
+        this.titleElement.innerHTML = `<i data-lucide="git-commit"></i> ${titleText}`;
 
         this.modalElement.classList.remove('hidden');
         this.modalElement.classList.add('visible');
