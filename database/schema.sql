@@ -1,4 +1,4 @@
--- PCB AutoRoute AI Visualizer Database Schema
+-- PCB AutoRouting Visualizer Database Schema
 -- SQLite3 compatible schema
 
 CREATE TABLE IF NOT EXISTS presets (

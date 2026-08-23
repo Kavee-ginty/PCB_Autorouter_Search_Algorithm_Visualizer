@@ -39,13 +39,13 @@ function markSolutionTree(goalTreeNode) {
 export function* searchBFS(bridge, startNodeId, goalNodeId, netId, targetPinId) {
     treeNodeCounter = 0;
     const startCoord = bridge.grid.toCoord(startNodeId);
-    const goalCoord = bridge.grid.toCoord(goalNodeId);
     const rootTree = createTreeNode(startNodeId, startCoord, 0, 0, 0, null);
+    const treeEdges = [];
 
     if (startNodeId === goalNodeId) {
         rootTree.status = 'solution';
-        yield { type: 'finish', success: true, path: [startNodeId], nodesExplored: 1, cost: 0, tree: rootTree };
-        return { success: true, path: [startNodeId], nodesExplored: 1, cost: 0, tree: rootTree };
+        yield { type: 'finish', success: true, path: [startNodeId], nodesExplored: 1, cost: 0, tree: rootTree, treeEdges };
+        return { success: true, path: [startNodeId], nodesExplored: 1, cost: 0, tree: rootTree, treeEdges };
     }
 
     const queue = [{ nodeId: startNodeId, treeNode: rootTree, path: [startNodeId], cost: 0 }];
@@ -57,16 +57,9 @@ export function* searchBFS(bridge, startNodeId, goalNodeId, netId, targetPinId) 
         nodesExplored++;
         current.treeNode.status = 'visited';
 
-        yield {
-            type: 'step',
-            currentNode: current.nodeId,
-            frontier: queue.map(q => q.nodeId),
-            visited: Array.from(visited),
-            nodesExplored,
-            tree: rootTree
-        };
-
         const neighbors = bridge.getNeighbors(current.nodeId, netId, targetPinId, current.path[current.path.length - 2]);
+        let goalReached = null;
+
         for (const n of neighbors) {
             if (!visited.has(n.id)) {
                 visited.add(n.id);
@@ -74,31 +67,70 @@ export function* searchBFS(bridge, startNodeId, goalNodeId, netId, targetPinId) 
                 const nTreeNode = createTreeNode(n.id, nCoord, current.treeNode.depth + 1, current.cost + n.cost, 0, current.treeNode, n.dir);
                 current.treeNode.children.push(nTreeNode);
 
+                treeEdges.push({ from: current.nodeId, to: n.id, cost: n.cost, dir: n.dir });
+
                 const nextPath = [...current.path, n.id];
                 const nextCost = current.cost + n.cost;
 
                 if (n.id === goalNodeId) {
                     markSolutionTree(nTreeNode);
-                    yield {
-                        type: 'finish',
-                        success: true,
-                        path: nextPath,
-                        frontier: queue.map(q => q.nodeId),
-                        visited: Array.from(visited),
-                        nodesExplored: nodesExplored + 1,
-                        cost: nextCost,
-                        tree: rootTree
-                    };
-                    return { success: true, path: nextPath, nodesExplored: nodesExplored + 1, cost: nextCost, tree: rootTree };
+                    goalReached = { path: nextPath, cost: nextCost, treeNode: nTreeNode };
+                } else {
+                    queue.push({ nodeId: n.id, treeNode: nTreeNode, path: nextPath, cost: nextCost });
                 }
-
-                queue.push({ nodeId: n.id, treeNode: nTreeNode, path: nextPath, cost: nextCost });
             }
+        }
+
+        yield {
+            type: 'step',
+            currentNode: current.nodeId,
+            currentPath: [...current.path],
+            treeEdges: [...treeEdges],
+            frontier: queue.map(q => q.nodeId),
+            visited: Array.from(visited),
+            nodesExplored,
+            depth: current.treeNode.depth,
+            g: current.cost,
+            h: 0,
+            f: current.cost,
+            action: goalReached ? 'goal_found' : 'expand',
+            tree: rootTree
+        };
+
+        if (goalReached) {
+            yield {
+                type: 'step',
+                currentNode: goalNodeId,
+                currentPath: goalReached.path,
+                treeEdges: [...treeEdges],
+                frontier: queue.map(q => q.nodeId),
+                visited: Array.from(visited),
+                nodesExplored: nodesExplored + 1,
+                depth: goalReached.treeNode.depth,
+                g: goalReached.cost,
+                h: 0,
+                f: goalReached.cost,
+                action: 'goal_reached',
+                tree: rootTree
+            };
+            yield {
+                type: 'finish',
+                success: true,
+                path: goalReached.path,
+                currentPath: goalReached.path,
+                treeEdges: [...treeEdges],
+                frontier: queue.map(q => q.nodeId),
+                visited: Array.from(visited),
+                nodesExplored: nodesExplored + 1,
+                cost: goalReached.cost,
+                tree: rootTree
+            };
+            return { success: true, path: goalReached.path, nodesExplored: nodesExplored + 1, cost: goalReached.cost, tree: rootTree, treeEdges };
         }
     }
 
-    yield { type: 'finish', success: false, path: [], nodesExplored, cost: 0, tree: rootTree };
-    return { success: false, path: [], nodesExplored, cost: 0, tree: rootTree };
+    yield { type: 'finish', success: false, path: [], currentPath: [], treeEdges: [...treeEdges], nodesExplored, cost: 0, tree: rootTree };
+    return { success: false, path: [], nodesExplored, cost: 0, tree: rootTree, treeEdges };
 }
 
 /**
@@ -108,11 +140,12 @@ export function* searchDFS(bridge, startNodeId, goalNodeId, netId, targetPinId) 
     treeNodeCounter = 0;
     const startCoord = bridge.grid.toCoord(startNodeId);
     const rootTree = createTreeNode(startNodeId, startCoord, 0, 0, 0, null);
+    const treeEdges = [];
 
     if (startNodeId === goalNodeId) {
         rootTree.status = 'solution';
-        yield { type: 'finish', success: true, path: [startNodeId], nodesExplored: 1, cost: 0, tree: rootTree };
-        return { success: true, path: [startNodeId], nodesExplored: 1, cost: 0, tree: rootTree };
+        yield { type: 'finish', success: true, path: [startNodeId], nodesExplored: 1, cost: 0, tree: rootTree, treeEdges };
+        return { success: true, path: [startNodeId], nodesExplored: 1, cost: 0, tree: rootTree, treeEdges };
     }
 
     const stack = [{ nodeId: startNodeId, treeNode: rootTree, path: [startNodeId], cost: 0 }];
@@ -129,26 +162,34 @@ export function* searchDFS(bridge, startNodeId, goalNodeId, netId, targetPinId) 
         if (current.nodeId === goalNodeId) {
             markSolutionTree(current.treeNode);
             yield {
+                type: 'step',
+                currentNode: current.nodeId,
+                currentPath: [...current.path],
+                treeEdges: [...treeEdges],
+                frontier: stack.map(s => s.nodeId),
+                visited: Array.from(visited),
+                nodesExplored,
+                depth: current.treeNode.depth,
+                g: current.cost,
+                h: 0,
+                f: current.cost,
+                action: 'goal_reached',
+                tree: rootTree
+            };
+            yield {
                 type: 'finish',
                 success: true,
                 path: current.path,
+                currentPath: [...current.path],
+                treeEdges: [...treeEdges],
                 frontier: stack.map(s => s.nodeId),
                 visited: Array.from(visited),
                 nodesExplored,
                 cost: current.cost,
                 tree: rootTree
             };
-            return { success: true, path: current.path, nodesExplored, cost: current.cost, tree: rootTree };
+            return { success: true, path: current.path, nodesExplored, cost: current.cost, tree: rootTree, treeEdges };
         }
-
-        yield {
-            type: 'step',
-            currentNode: current.nodeId,
-            frontier: stack.map(s => s.nodeId),
-            visited: Array.from(visited),
-            nodesExplored,
-            tree: rootTree
-        };
 
         const neighbors = bridge.getNeighbors(current.nodeId, netId, targetPinId, current.path[current.path.length - 2]);
         // Reverse for standard exploration order
@@ -159,6 +200,8 @@ export function* searchDFS(bridge, startNodeId, goalNodeId, netId, targetPinId) 
                 const nTreeNode = createTreeNode(n.id, nCoord, current.treeNode.depth + 1, current.cost + n.cost, 0, current.treeNode, n.dir);
                 current.treeNode.children.push(nTreeNode);
 
+                treeEdges.push({ from: current.nodeId, to: n.id, cost: n.cost, dir: n.dir });
+
                 stack.push({
                     nodeId: n.id,
                     treeNode: nTreeNode,
@@ -167,10 +210,26 @@ export function* searchDFS(bridge, startNodeId, goalNodeId, netId, targetPinId) 
                 });
             }
         }
+
+        yield {
+            type: 'step',
+            currentNode: current.nodeId,
+            currentPath: [...current.path],
+            treeEdges: [...treeEdges],
+            frontier: stack.map(s => s.nodeId),
+            visited: Array.from(visited),
+            nodesExplored,
+            depth: current.treeNode.depth,
+            g: current.cost,
+            h: 0,
+            f: current.cost,
+            action: 'expand',
+            tree: rootTree
+        };
     }
 
-    yield { type: 'finish', success: false, path: [], nodesExplored, cost: 0, tree: rootTree };
-    return { success: false, path: [], nodesExplored, cost: 0, tree: rootTree };
+    yield { type: 'finish', success: false, path: [], currentPath: [], treeEdges: [...treeEdges], nodesExplored, cost: 0, tree: rootTree };
+    return { success: false, path: [], nodesExplored, cost: 0, tree: rootTree, treeEdges };
 }
 
 /**
@@ -180,6 +239,7 @@ export function* searchDLS(bridge, startNodeId, goalNodeId, netId, targetPinId, 
     treeNodeCounter = 0;
     const startCoord = bridge.grid.toCoord(startNodeId);
     const rootTree = createTreeNode(startNodeId, startCoord, 0, 0, 0, null);
+    const treeEdges = [];
 
     const visitedAtDepth = new Map(); // nodeId -> minDepth visited
     let nodesExplored = 0;
@@ -197,10 +257,16 @@ export function* searchDLS(bridge, startNodeId, goalNodeId, netId, targetPinId, 
         yield {
             type: 'step',
             currentNode: current.nodeId,
+            currentPath: [...current.path],
+            treeEdges: [...treeEdges],
             depth: current.depth,
             limit,
             visited: Array.from(visitedAtDepth.keys()),
             nodesExplored,
+            g: current.cost,
+            h: 0,
+            f: current.cost,
+            action: current.depth >= limit ? 'prune' : 'expand',
             tree: rootTree
         };
 
@@ -218,6 +284,8 @@ export function* searchDLS(bridge, startNodeId, goalNodeId, netId, targetPinId, 
                 const nCoord = bridge.grid.toCoord(n.id);
                 const nTreeNode = createTreeNode(n.id, nCoord, nextDepth, current.cost + n.cost, 0, current.treeNode, n.dir);
                 current.treeNode.children.push(nTreeNode);
+
+                treeEdges.push({ from: current.nodeId, to: n.id, cost: n.cost, dir: n.dir });
 
                 const nextState = {
                     nodeId: n.id,
@@ -246,11 +314,11 @@ export function* searchDLS(bridge, startNodeId, goalNodeId, netId, targetPinId, 
 
     const outcome = yield* dlsHelper(startState);
     if (outcome.found) {
-        yield { type: 'finish', success: true, path: outcome.path, cost: outcome.cost, nodesExplored, tree: rootTree };
-        return { success: true, path: outcome.path, cost: outcome.cost, nodesExplored, tree: rootTree };
+        yield { type: 'finish', success: true, path: outcome.path, currentPath: outcome.path, treeEdges: [...treeEdges], cost: outcome.cost, nodesExplored, tree: rootTree };
+        return { success: true, path: outcome.path, cost: outcome.cost, nodesExplored, tree: rootTree, treeEdges };
     } else {
-        yield { type: 'finish', success: false, path: [], cost: 0, nodesExplored, cutoff: outcome.cutoff, tree: rootTree };
-        return { success: false, path: [], cost: 0, nodesExplored, cutoff: outcome.cutoff, tree: rootTree };
+        yield { type: 'finish', success: false, path: [], currentPath: [], treeEdges: [...treeEdges], cost: 0, nodesExplored, cutoff: outcome.cutoff, tree: rootTree };
+        return { success: false, path: [], cost: 0, nodesExplored, cutoff: outcome.cutoff, tree: rootTree, treeEdges };
     }
 }
 
@@ -260,6 +328,7 @@ export function* searchDLS(bridge, startNodeId, goalNodeId, netId, targetPinId, 
 export function* searchIDS(bridge, startNodeId, goalNodeId, netId, targetPinId, maxDepth = 25) {
     let totalNodesExplored = 0;
     let finalTree = null;
+    let lastTreeEdges = [];
 
     for (let depthLimit = 1; depthLimit <= maxDepth; depthLimit++) {
         yield { type: 'iteration_start', currentLimit: depthLimit };
@@ -275,6 +344,7 @@ export function* searchIDS(bridge, startNodeId, goalNodeId, netId, targetPinId, 
             }
             if (step.value.type === 'step') {
                 totalNodesExplored++;
+                if (step.value.treeEdges) lastTreeEdges = step.value.treeEdges;
                 yield { ...step.value, currentLimit: depthLimit, totalNodesExplored };
             }
             if (step.value.tree) {
@@ -287,6 +357,8 @@ export function* searchIDS(bridge, startNodeId, goalNodeId, netId, targetPinId, 
                 type: 'finish',
                 success: true,
                 path: result.path,
+                currentPath: result.path,
+                treeEdges: result.treeEdges || lastTreeEdges,
                 cost: result.cost,
                 nodesExplored: totalNodesExplored,
                 depthLimitReached: depthLimit,
@@ -297,13 +369,14 @@ export function* searchIDS(bridge, startNodeId, goalNodeId, netId, targetPinId, 
                 path: result.path,
                 cost: result.cost,
                 nodesExplored: totalNodesExplored,
-                tree: result.tree || finalTree
+                tree: result.tree || finalTree,
+                treeEdges: result.treeEdges || lastTreeEdges
             };
         }
     }
 
-    yield { type: 'finish', success: false, path: [], nodesExplored: totalNodesExplored, tree: finalTree };
-    return { success: false, path: [], nodesExplored: totalNodesExplored, tree: finalTree };
+    yield { type: 'finish', success: false, path: [], currentPath: [], treeEdges: lastTreeEdges, nodesExplored: totalNodesExplored, tree: finalTree };
+    return { success: false, path: [], nodesExplored: totalNodesExplored, tree: finalTree, treeEdges: lastTreeEdges };
 }
 
 /**
@@ -313,6 +386,7 @@ export function* searchUCS(bridge, startNodeId, goalNodeId, netId, targetPinId) 
     treeNodeCounter = 0;
     const startCoord = bridge.grid.toCoord(startNodeId);
     const rootTree = createTreeNode(startNodeId, startCoord, 0, 0, 0, null);
+    const treeEdges = [];
 
     const pq = new MinPriorityQueue();
     pq.push({ nodeId: startNodeId, treeNode: rootTree, path: [startNodeId], cost: 0 }, 0);
@@ -332,27 +406,35 @@ export function* searchUCS(bridge, startNodeId, goalNodeId, netId, targetPinId) 
         if (current.nodeId === goalNodeId) {
             markSolutionTree(current.treeNode);
             yield {
+                type: 'step',
+                currentNode: current.nodeId,
+                currentPath: [...current.path],
+                treeEdges: [...treeEdges],
+                currentCost: current.cost,
+                g: current.cost,
+                h: 0,
+                f: current.cost,
+                depth: current.treeNode.depth,
+                frontier: pq.getItems().map(item => item.nodeId),
+                visited: Array.from(visited),
+                nodesExplored,
+                action: 'goal_reached',
+                tree: rootTree
+            };
+            yield {
                 type: 'finish',
                 success: true,
                 path: current.path,
+                currentPath: [...current.path],
+                treeEdges: [...treeEdges],
                 frontier: pq.getItems().map(item => item.nodeId),
                 visited: Array.from(visited),
                 nodesExplored,
                 cost: current.cost,
                 tree: rootTree
             };
-            return { success: true, path: current.path, nodesExplored, cost: current.cost, tree: rootTree };
+            return { success: true, path: current.path, nodesExplored, cost: current.cost, tree: rootTree, treeEdges };
         }
-
-        yield {
-            type: 'step',
-            currentNode: current.nodeId,
-            currentCost: current.cost,
-            frontier: pq.getItems().map(item => item.nodeId),
-            visited: Array.from(visited),
-            nodesExplored,
-            tree: rootTree
-        };
 
         const neighbors = bridge.getNeighbors(current.nodeId, netId, targetPinId, current.path[current.path.length - 2]);
         for (const n of neighbors) {
@@ -363,6 +445,8 @@ export function* searchUCS(bridge, startNodeId, goalNodeId, netId, targetPinId) 
                 const nTreeNode = createTreeNode(n.id, nCoord, current.treeNode.depth + 1, nextCost, 0, current.treeNode, n.dir);
                 current.treeNode.children.push(nTreeNode);
 
+                treeEdges.push({ from: current.nodeId, to: n.id, cost: n.cost, dir: n.dir });
+
                 pq.push({
                     nodeId: n.id,
                     treeNode: nTreeNode,
@@ -371,8 +455,25 @@ export function* searchUCS(bridge, startNodeId, goalNodeId, netId, targetPinId) 
                 }, nextCost);
             }
         }
+
+        yield {
+            type: 'step',
+            currentNode: current.nodeId,
+            currentPath: [...current.path],
+            treeEdges: [...treeEdges],
+            currentCost: current.cost,
+            g: current.cost,
+            h: 0,
+            f: current.cost,
+            depth: current.treeNode.depth,
+            frontier: pq.getItems().map(item => item.nodeId),
+            visited: Array.from(visited),
+            nodesExplored,
+            action: 'expand',
+            tree: rootTree
+        };
     }
 
-    yield { type: 'finish', success: false, path: [], nodesExplored, cost: 0, tree: rootTree };
-    return { success: false, path: [], nodesExplored, cost: 0, tree: rootTree };
+    yield { type: 'finish', success: false, path: [], currentPath: [], treeEdges: [...treeEdges], nodesExplored, cost: 0, tree: rootTree };
+    return { success: false, path: [], nodesExplored, cost: 0, tree: rootTree, treeEdges };
 }

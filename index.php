@@ -1,6 +1,6 @@
 <?php
 /**
- * index.php - Main entrypoint for PCB AutoRoute AI Visualizer
+ * index.php - Main entrypoint for PCB AutoRouting Visualizer
  */
 ?>
 <!DOCTYPE html>
@@ -8,7 +8,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PCB AutoRoute AI Visualizer • 50x40mm Single-Layer Router</title>
+    <title>PCB AutoRouting Visualizer</title>
+    <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/tree.css">
     <script src="js/vendor/lucide.min.js"></script>
@@ -23,17 +24,17 @@
                 <i data-lucide="circuit-board"></i>
             </div>
             <div class="brand-title">
-                <h1>PCB AutoRoute AI Visualizer</h1>
-                <p class="brand-subtitle">50 mm × 40 mm (10×8 Grid, 5 mm Pitch) Single-Layer AI Pathfinding & Conflict Engine</p>
+                <h1>PCB Auto Routing Visualizer</h1>
+                <p class="brand-subtitle">Visualize How Search Algorithms Perform in a Single Layer PCB Auto Router</p>
             </div>
         </div>
         <div class="header-actions">
             <span id="status-badge" class="status-badge status-ready">Ready to Route</span>
             <button id="btn-save-board" class="btn btn-secondary" title="Save Layout to Database">
-                <i data-lucide="save"></i> Save Layout
+                <i data-lucide="save"></i>
             </button>
             <button id="btn-load-board" class="btn btn-secondary" title="Load Layout from Database">
-                <i data-lucide="folder-open"></i> Load Layout
+                <i data-lucide="folder-open"></i>
             </button>
         </div>
     </header>
@@ -106,11 +107,14 @@
                 </button>
 
                 <div class="btn-group">
-                    <button id="btn-step" class="btn btn-secondary">
-                        <i data-lucide="step-forward"></i> Single Step
+                    <button id="btn-step-back" class="btn btn-secondary" title="Step Back to Previous Node">
+                        <i data-lucide="step-back"></i> Step Back
                     </button>
-                    <button id="btn-reset" class="btn btn-danger">
-                        <i data-lucide="rotate-ccw"></i> Reset Traces
+                    <button id="btn-step" class="btn btn-secondary" title="Step Forward to Next Node">
+                        <i data-lucide="step-forward"></i> Step Next
+                    </button>
+                    <button id="btn-reset" class="btn btn-danger" title="Reset Traces">
+                        <i data-lucide="rotate-ccw"></i> Reset
                     </button>
                 </div>
 
@@ -137,9 +141,9 @@
                     <div class="legend-item"><img src="resources/Resistor.svg" class="legend-svg-thumb" alt="Resistor"> Resistor </div>
                     <div class="legend-item"><img src="resources/LED.svg" class="legend-svg-thumb" alt="LED"> LED </div>
                 </div>
-                <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
+                <!-- <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
                     💡 <em>Tip: Drag to move. Double-click or Right-click to rotate 90°.</em>
-                </p>
+                </p> -->
             </div>
 
             <!-- Export Options Panel (Matching aisearch-v2) -->
@@ -167,6 +171,13 @@
 
         <!-- Center Canvas PCB Board -->
         <section class="canvas-workspace">
+            <!-- Canvas Floating View Controls -->
+            <div class="canvas-controls-overlay">
+                <button id="btn-canvas-reset-view" class="canvas-btn-icon" title="Reset View & Center PCB">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                </button>
+            </div>
+
             <canvas id="pcb-canvas"></canvas>
             <div class="canvas-hint">
                 <i data-lucide="info" style="width: 14px; height: 14px;"></i>
@@ -180,7 +191,7 @@
             <!-- Real-Time Metrics -->
             <div class="panel-section">
                 <div class="section-header">
-                    <i data-lucide="bar-chart-2"></i> Performance HUD
+                    <i data-lucide="bar-chart-2"></i> Performance Metrics
                 </div>
                 <div class="metrics-grid">
                     <div class="metric-card">
@@ -254,17 +265,8 @@
                     </div>
                 </div>
                 <div class="tree-header-controls">
-                    <button id="tree-zoom-in" class="tree-btn-icon" title="Zoom In">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
-                    </button>
-                    <button id="tree-zoom-out" class="tree-btn-icon" title="Zoom Out">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
-                    </button>
-                    <button id="tree-zoom-reset" class="tree-btn-icon" title="Reset View">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
-                    </button>
                     <button id="tree-modal-close" class="tree-btn-icon" title="Close">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        <i data-lucide="x"></i>
                     </button>
                 </div>
             </div>

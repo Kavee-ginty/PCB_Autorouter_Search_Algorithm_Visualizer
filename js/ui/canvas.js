@@ -72,6 +72,14 @@ export class PcbCanvas {
         this.activeFrontier = new Set();
         this.activeCurrentNode = null;
         this.activeSolutionPath = [];
+        this.activeCurrentPath = [];
+        this.activeTreeEdges = [];
+        this.activeTreeEdgesF = [];
+        this.activeTreeEdgesB = [];
+        this.activeNet = null;
+        this.activeDirection = null;
+        this.rippedPaths = [];
+
         // Zoom & Pan state
         this.scale = 1.0;
         this.panX = 0;
@@ -91,10 +99,21 @@ export class PcbCanvas {
         this.render();
     }
 
+    zoomIn() {
+        this.scale = Math.min(this.maxScale, this.scale * 1.2);
+        this.render();
+    }
+
+    zoomOut() {
+        this.scale = Math.max(this.minScale, this.scale / 1.2);
+        this.render();
+    }
+
     resetView() {
         this.scale = 1.0;
         this.panX = 0;
         this.panY = 0;
+        this._setupCanvasSize();
         this.render();
     }
 
@@ -208,11 +227,18 @@ export class PcbCanvas {
         }
     }
 
-    setSearchState(visited, frontier, currentNode = null, path = []) {
+    setSearchState(visited, frontier, currentNode = null, currentPath = [], treeEdges = [], options = {}) {
         this.activeVisited = new Set(visited || []);
         this.activeFrontier = new Set(frontier || []);
         this.activeCurrentNode = currentNode;
-        this.activeSolutionPath = path || [];
+        this.activeCurrentPath = currentPath || [];
+        this.activeTreeEdges = treeEdges || [];
+        this.activeTreeEdgesF = options.treeEdgesF || [];
+        this.activeTreeEdgesB = options.treeEdgesB || [];
+        this.activeSolutionPath = options.solutionPath || [];
+        this.activeNet = options.net || null;
+        this.activeDirection = options.direction || null;
+        this.activeMeta = options.meta || null;
         this.render();
     }
 
@@ -221,7 +247,13 @@ export class PcbCanvas {
         this.activeFrontier.clear();
         this.activeCurrentNode = null;
         this.activeSolutionPath = [];
-        this.flashConflictCells = [];
+        this.activeCurrentPath = [];
+        this.activeTreeEdges = [];
+        this.activeTreeEdgesF = [];
+        this.activeTreeEdgesB = [];
+        this.activeNet = null;
+        this.activeDirection = null;
+        this.activeMeta = null;
         this.render();
     }
 
@@ -310,7 +342,7 @@ export class PcbCanvas {
         // Clean silkscreen watermark
         ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
         ctx.font = '600 10px monospace';
-        ctx.fillText('PCB AUTOROUTE AI VISUALIZER', pcbX + 16, pcbY + pcbH - 8);
+        ctx.fillText('PCB AutoRouting Visualizer', pcbX + 16, pcbY + pcbH - 8);
     }
 
     _renderGridMatrix(ctx) {
@@ -404,6 +436,19 @@ export class PcbCanvas {
                c.includes('amber') || c.includes('f59') || c.includes('eab');
     }
 
+    _hexToRgba(hex, alpha = 1.0) {
+        if (!hex || typeof hex !== 'string') return `rgba(6, 182, 212, ${alpha})`;
+        let c = hex.replace('#', '').trim();
+        if (c.length === 3) {
+            c = c.split('').map(x => x + x).join('');
+        }
+        if (c.length !== 6) return `rgba(6, 182, 212, ${alpha})`;
+        const r = parseInt(c.substring(0, 2), 16);
+        const g = parseInt(c.substring(2, 4), 16);
+        const b = parseInt(c.substring(4, 6), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
     _renderTraces(ctx) {
         // Draw traces net by net for beautiful copper routes
         ctx.lineCap = 'round';
@@ -442,47 +487,271 @@ export class PcbCanvas {
     }
 
     _renderSearchOverlay(ctx) {
-        // Visited nodes in cyan
+        ctx.save();
+
+        const netColor = this.activeNet?.color || '#38bdf8';
+
+        // 1. Air-Wire Guide to Target Pin (Euclidean ray)
+        if (this.activeNet) {
+            let srcCoord = null, tgtCoord = null;
+            for (const comp of this.components) {
+                for (const pin of comp.getPins()) {
+                    if (pin.id === this.activeNet.source) srcCoord = { x: pin.x, y: pin.y };
+                    if (pin.id === this.activeNet.target) tgtCoord = { x: pin.x, y: pin.y };
+                }
+            }
+            if (srcCoord && tgtCoord) {
+                const pSrc = this.gridToPixel(srcCoord.x, srcCoord.y);
+                const pTgt = this.gridToPixel(tgtCoord.x, tgtCoord.y);
+                ctx.strokeStyle = this._hexToRgba(netColor, 0.35);
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(pSrc.x, pSrc.y);
+                ctx.lineTo(pTgt.x, pTgt.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+
+        // 2. Visited Search Tree Branches (Parent -> Child Directed Edges)
+        if (this.activeTreeEdgesF && this.activeTreeEdgesF.length > 0) {
+            // Bidirectional Forward Tree - Pass 1 (Outer Glow in Net Color)
+            ctx.strokeStyle = this._hexToRgba(netColor, 0.45);
+            ctx.shadowColor = netColor;
+            ctx.shadowBlur = 8;
+            ctx.lineWidth = 5.0;
+            ctx.lineCap = 'round';
+            for (const edge of this.activeTreeEdgesF) {
+                const c1 = this.grid.toCoord(edge.from);
+                const c2 = this.grid.toCoord(edge.to);
+                if (c1 && c2) {
+                    const p1 = this.gridToPixel(c1.x, c1.y);
+                    const p2 = this.gridToPixel(c2.x, c2.y);
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+            }
+            // Bidirectional Forward Tree - Pass 2 (Core Line in Net Color)
+            ctx.strokeStyle = netColor;
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.lineWidth = 2.5;
+            for (const edge of this.activeTreeEdgesF) {
+                const c1 = this.grid.toCoord(edge.from);
+                const c2 = this.grid.toCoord(edge.to);
+                if (c1 && c2) {
+                    const p1 = this.gridToPixel(c1.x, c1.y);
+                    const p2 = this.gridToPixel(c2.x, c2.y);
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        if (this.activeTreeEdgesB && this.activeTreeEdgesB.length > 0) {
+            // Bidirectional Backward Tree - Pass 1 (Outer Glow)
+            ctx.strokeStyle = 'rgba(217, 70, 239, 0.45)';
+            ctx.shadowColor = '#a855f7';
+            ctx.shadowBlur = 8;
+            ctx.lineWidth = 5.0;
+            ctx.lineCap = 'round';
+            for (const edge of this.activeTreeEdgesB) {
+                const c1 = this.grid.toCoord(edge.from);
+                const c2 = this.grid.toCoord(edge.to);
+                if (c1 && c2) {
+                    const p1 = this.gridToPixel(c1.x, c1.y);
+                    const p2 = this.gridToPixel(c2.x, c2.y);
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+            }
+            // Bidirectional Backward Tree - Pass 2 (Core Line)
+            ctx.strokeStyle = '#d946ef';
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.lineWidth = 2.5;
+            for (const edge of this.activeTreeEdgesB) {
+                const c1 = this.grid.toCoord(edge.from);
+                const c2 = this.grid.toCoord(edge.to);
+                if (c1 && c2) {
+                    const p1 = this.gridToPixel(c1.x, c1.y);
+                    const p2 = this.gridToPixel(c2.x, c2.y);
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        if ((!this.activeTreeEdgesF || this.activeTreeEdgesF.length === 0) && 
+            (!this.activeTreeEdgesB || this.activeTreeEdgesB.length === 0) && 
+            this.activeTreeEdges && this.activeTreeEdges.length > 0) {
+            // Standard Search Tree - Pass 1 (Outer Neon Laser Glow in Net Color)
+            ctx.strokeStyle = this._hexToRgba(netColor, 0.45);
+            ctx.shadowColor = netColor;
+            ctx.shadowBlur = 8;
+            ctx.lineWidth = 5.0;
+            ctx.lineCap = 'round';
+
+            for (const edge of this.activeTreeEdges) {
+                const c1 = this.grid.toCoord(edge.from);
+                const c2 = this.grid.toCoord(edge.to);
+                if (c1 && c2) {
+                    const p1 = this.gridToPixel(c1.x, c1.y);
+                    const p2 = this.gridToPixel(c2.x, c2.y);
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+            }
+
+            // Standard Search Tree - Pass 2 (Core Crisp Vector in Net Color)
+            ctx.strokeStyle = netColor;
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.lineWidth = 2.5;
+
+            for (const edge of this.activeTreeEdges) {
+                const c1 = this.grid.toCoord(edge.from);
+                const c2 = this.grid.toCoord(edge.to);
+                if (c1 && c2) {
+                    const p1 = this.gridToPixel(c1.x, c1.y);
+                    const p2 = this.gridToPixel(c2.x, c2.y);
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+
+                    // Branch node joint marker
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(p2.x, p2.y, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        // 3. Visited Nodes
         for (const nodeId of this.activeVisited) {
             const coord = this.grid.toCoord(nodeId);
             if (!coord) continue;
             const p = this.gridToPixel(coord.x, coord.y);
 
-            ctx.fillStyle = 'rgba(6, 182, 212, 0.45)';
+            ctx.fillStyle = this._hexToRgba(netColor, 0.25);
+            ctx.strokeStyle = this._hexToRgba(netColor, 0.75);
+            ctx.lineWidth = 1.2;
             ctx.beginPath();
-            ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, 5.5, 0, Math.PI * 2);
             ctx.fill();
+            ctx.stroke();
         }
 
-        // Frontier nodes in amber
+        // 4. Frontier Nodes
         for (const nodeId of this.activeFrontier) {
             const coord = this.grid.toCoord(nodeId);
             if (!coord) continue;
             const p = this.gridToPixel(coord.x, coord.y);
 
-            ctx.fillStyle = 'rgba(245, 158, 11, 0.7)';
+            ctx.fillStyle = 'rgba(245, 158, 11, 0.75)';
             ctx.strokeStyle = '#fef08a';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, 6.5, 0, Math.PI * 2);
             ctx.fill();
             ctx.stroke();
         }
 
-        // Current search head in pulsing emerald
+        // 5. Active Current Path / Probe Trail (Root Pin -> Current Head in Net Color)
+        if (this.activeCurrentPath && this.activeCurrentPath.length > 1) {
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // Outer vibrant branch glow
+            ctx.strokeStyle = netColor;
+            ctx.shadowColor = netColor;
+            ctx.shadowBlur = 10;
+            ctx.lineWidth = 4.5;
+
+            ctx.beginPath();
+            const p0 = this.grid.toCoord(this.activeCurrentPath[0]);
+            const p0px = this.gridToPixel(p0.x, p0.y);
+            ctx.moveTo(p0px.x, p0px.y);
+
+            for (let i = 1; i < this.activeCurrentPath.length; i++) {
+                const pt = this.grid.toCoord(this.activeCurrentPath[i]);
+                const ptPx = this.gridToPixel(pt.x, pt.y);
+                ctx.lineTo(ptPx.x, ptPx.y);
+            }
+            ctx.stroke();
+
+            // Inner crisp bright core
+            ctx.strokeStyle = '#ffffff';
+            ctx.shadowColor = 'transparent';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+
+        // 6. Active Search Head / Probe Head
         if (this.activeCurrentNode !== null) {
             const coord = this.grid.toCoord(this.activeCurrentNode);
             if (coord) {
                 const p = this.gridToPixel(coord.x, coord.y);
-                ctx.fillStyle = '#10b981';
-                ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 2;
+
+                const isBackward = this.activeDirection === 'backward';
+                const pulseColor = isBackward ? 'rgba(217, 70, 239, 0.4)' : this._hexToRgba(netColor, 0.4);
+                const headColor = isBackward ? '#d946ef' : netColor;
+
+                // Outer animated pulse ring
+                ctx.fillStyle = pulseColor;
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, 9, 0, Math.PI * 2);
+                ctx.arc(p.x, p.y, 13, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Inner solid probe marker
+                ctx.fillStyle = headColor;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2.5;
+                ctx.shadowColor = headColor;
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.stroke();
+                ctx.shadowColor = 'transparent';
+
+                // Floating mini coordinate HUD badge above search probe
+                const tagText = `(${coord.x},${coord.y})`;
+                ctx.font = 'bold 9px monospace';
+                const tagW = ctx.measureText(tagText).width + 8;
+                const tagH = 14;
+                const tagX = p.x - tagW / 2;
+                const tagY = p.y - 20;
+
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+                ctx.strokeStyle = headColor;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.roundRect(tagX, tagY, tagW, tagH, 3);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(tagText, tagX + tagW / 2, tagY + tagH / 2 + 0.5);
             }
         }
+
+        ctx.restore();
     }
 
     _renderComponents(ctx) {
@@ -612,7 +881,7 @@ export class PcbCanvas {
             'D-K': 'LED -'
         };
         const pinName = friendlyMap[this.hoveredPin.id] || (this.hoveredPin.label ? `Pin ${this.hoveredPin.label}` : 'Pin');
-        const text = `${pinName} (${this.hoveredPin.x * this.pitchMm}mm, ${this.hoveredPin.y * this.pitchMm}mm)`;
+        const text = pinName;
         
         ctx.font = '10px sans-serif';
         const textWidth = ctx.measureText(text).width;

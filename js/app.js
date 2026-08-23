@@ -1,5 +1,5 @@
 /**
- * app.js - Main Application Orchestrator for PCB AutoRoute AI Visualizer
+ * app.js - Main Application Orchestrator for PCB AutoRouting Visualizer
  */
 
 import { PcbGrid, GRID_COLS, GRID_ROWS, PITCH_MM } from './core/grid.js';
@@ -32,6 +32,9 @@ class PcbApp {
         this.activeRouterGenerator = null;
         this.timerId = null;
         this.routedDataMap = new Map(); // netId -> routed summary
+        this.stepHistory = [];
+        this.historyIndex = -1;
+        this.currentActiveNet = null;
 
         this.canvasElement = document.getElementById('pcb-canvas');
         this.canvas = new PcbCanvas(this.canvasElement, this.grid, {
@@ -40,7 +43,7 @@ class PcbApp {
             onSelectionChanged: (comp) => this.onSelectionChanged(comp)
         });
 
-        this.treeModal = new StateSpaceTreeModal();
+        this.treeModal = new StateSpaceTreeModal(this);
         this.controls = new PcbControls(this);
 
         this.init();
@@ -162,13 +165,25 @@ class PcbApp {
         // Find net connected to this pin
         let net = this.nets.find(n => n.source === pin.id || n.target === pin.id);
         let routed = net ? this.routedDataMap.get(net.id) : null;
+        let treeData = routed?.tree;
 
-        if (routed && routed.tree) {
+        if (!treeData && net) {
+            // Check if active step or history has a tree for this net
+            for (let i = this.stepHistory.length - 1; i >= 0; i--) {
+                const s = this.stepHistory[i];
+                if (s.activeNet?.id === net.id && s.searchState?.meta?.tree) {
+                    treeData = s.searchState.meta.tree;
+                    break;
+                }
+            }
+        }
+
+        if (treeData) {
             const algoInfo = ALGORITHMS[this.currentAlgorithm]?.name || this.currentAlgorithm;
-            this.treeModal.show(pin, net, routed.tree, algoInfo);
+            this.treeModal.show(pin, net, treeData, algoInfo);
         } else {
             // Find if any net was routed from this pin
-            this.controls.setStatus(`Pin ${pin.label} clicked. Run routing to view search tree!`, 'idle');
+            this.controls.setStatus(`Pin ${pin.label || pin.id} clicked. Run routing or step forward to explore search tree!`, 'idle');
         }
     }
 
@@ -257,6 +272,13 @@ class PcbApp {
     stepRoute() {
         if (this.isRunning) this.pauseRouting();
 
+        // If user has stepped back and wants to step forward in recorded history:
+        if (this.historyIndex < this.stepHistory.length - 1) {
+            this.historyIndex++;
+            this._applySnapshot(this.stepHistory[this.historyIndex]);
+            return;
+        }
+
         if (!this.activeRouterGenerator) {
             this.resetRouting();
             this.activeRouterGenerator = this.router.routeAllNets(
@@ -279,9 +301,134 @@ class PcbApp {
         this._processRouterStep(step.value);
     }
 
+    stepBack() {
+        if (this.isRunning) this.pauseRouting();
+
+        if (this.historyIndex > 0) {
+            this.historyIndex--;
+            this._applySnapshot(this.stepHistory[this.historyIndex]);
+        } else if (this.historyIndex === 0) {
+            this.controls.setStatus('At beginning of search history.', 'ready');
+        }
+    }
+
+    _captureSnapshot(step, explanation = '') {
+        const snapshot = {
+            cells: [...this.grid.cells],
+            occupants: this.grid.occupants.map(o => o ? { ...o } : null),
+            penalties: [...this.grid.penalties],
+            nets: this.nets.map(n => ({ ...n, path: n.path ? [...n.path] : null })),
+            routedDataMap: new Map(this.routedDataMap),
+            rippedPaths: [...this.canvas.rippedPaths],
+            activeNet: step.net || this.currentActiveNet || null,
+            searchState: {
+                visited: step.visited ? [...step.visited] : [],
+                frontier: step.frontier ? [...step.frontier] : [],
+                currentNode: step.currentNode !== undefined ? step.currentNode : null,
+                currentPath: step.currentPath ? [...step.currentPath] : [],
+                treeEdges: step.treeEdges ? [...step.treeEdges] : [],
+                treeEdgesF: step.treeEdgesF ? [...step.treeEdgesF] : [],
+                treeEdgesB: step.treeEdgesB ? [...step.treeEdgesB] : [],
+                net: step.net || this.currentActiveNet || null,
+                direction: step.direction || null,
+                meta: step
+            },
+            hudInfo: {
+                net: step.net || this.currentActiveNet || null,
+                action: step.action || (step.type === 'search_step' ? 'Exploring' : (step.type === 'net_routed' ? 'Routed' : step.type)),
+                currentNode: step.currentNode,
+                currentPath: step.currentPath,
+                treeEdges: step.treeEdges,
+                depth: step.depth,
+                g: step.g !== undefined ? step.g : (step.cost !== undefined ? step.cost : 0),
+                h: step.h !== undefined ? step.h : 0,
+                f: step.f !== undefined ? step.f : 0,
+                explanation: explanation
+            },
+            metrics: {
+                netsRouted: this.routedDataMap.size,
+                netsTotal: this.nets.length,
+                totalNodesExplored: step.totalNodesExplored || 0,
+                totalWireLengthMm: this._calculateCurrentWireLength(),
+                totalRipups: this.totalRipups || 0,
+                executionTimeMs: 0
+            },
+            status: {
+                text: this.controls.statusBadge ? this.controls.statusBadge.textContent : '',
+                type: this.controls.statusBadge ? (this.controls.statusBadge.className.match(/status-([a-z0-9_-]+)/)?.[1] || 'idle') : 'idle'
+            }
+        };
+
+        if (this.historyIndex < this.stepHistory.length - 1) {
+            this.stepHistory = this.stepHistory.slice(0, this.historyIndex + 1);
+        }
+
+        this.stepHistory.push(snapshot);
+        this.historyIndex = this.stepHistory.length - 1;
+    }
+
+    _applySnapshot(snapshot) {
+        if (!snapshot) return;
+
+        // Restore grid
+        if (snapshot.cells) {
+            this.grid.cells = [...snapshot.cells];
+        }
+        if (snapshot.occupants) {
+            for (let i = 0; i < this.grid.totalNodes; i++) {
+                this.grid.occupants[i] = snapshot.occupants[i] ? { ...snapshot.occupants[i] } : null;
+            }
+        }
+        if (snapshot.penalties) {
+            this.grid.penalties = [...snapshot.penalties];
+        }
+
+        // Restore nets
+        for (let i = 0; i < this.nets.length; i++) {
+            const sn = snapshot.nets.find(n => n.id === this.nets[i].id);
+            if (sn) {
+                this.nets[i].path = sn.path ? [...sn.path] : null;
+            }
+        }
+
+        // Restore routed map
+        this.routedDataMap = new Map(snapshot.routedDataMap);
+
+        // Restore canvas state
+        this.canvas.rippedPaths = [...snapshot.rippedPaths];
+        this.canvas.setSearchState(
+            snapshot.searchState.visited,
+            snapshot.searchState.frontier,
+            snapshot.searchState.currentNode,
+            snapshot.searchState.currentPath,
+            snapshot.searchState.treeEdges,
+            snapshot.searchState
+        );
+        this.canvas.setCircuit(this.components, this.nets);
+
+        // Restore controls & HUD
+        this.controls.renderNetlist(this.nets, this.routedDataMap);
+        this.controls.updateMetrics(snapshot.metrics);
+        this.controls.updateSearchHud(snapshot.hudInfo);
+        this.controls.setStatus(snapshot.status.text, snapshot.status.type);
+    }
+
+    _calculateCurrentWireLength() {
+        let len = 0;
+        for (const net of this.nets) {
+            if (net.path && net.path.length > 1) {
+                len += (net.path.length - 1) * this.grid.pitch;
+            }
+        }
+        return len;
+    }
+
     resetRouting() {
         this.pauseRouting();
         this.activeRouterGenerator = null;
+        this.stepHistory = [];
+        this.historyIndex = -1;
+        this.currentActiveNet = null;
         this.grid.clearTraces();
         this.grid.resetPenalties();
         this.routedDataMap.clear();
@@ -302,6 +449,10 @@ class PcbApp {
             totalRipups: 0,
             executionTimeMs: 0
         });
+        this.controls.updateSearchHud({
+            action: 'Ready',
+            explanation: 'Ready to route. Click "Auto Route All" or "Step Next" to begin.'
+        });
 
         const btn = document.getElementById('btn-route');
         if (btn) {
@@ -314,13 +465,66 @@ class PcbApp {
     _processRouterStep(step) {
         if (!step) return;
 
-        if (step.type === 'search_step') {
-            this.canvas.setSearchState(step.visited, step.frontier, step.currentNode);
+        if (step.type === 'net_start') {
+            this.currentActiveNet = step.net;
+            const srcName = this.controls.getFriendlyPinName(step.net.source);
+            const tgtName = this.controls.getFriendlyPinName(step.net.target);
+
+            this.canvas.setSearchState([], [], step.startNodeId, [step.startNodeId], [], {
+                net: step.net
+            });
+            const expl = `Starting search for ${step.net.name} from pin ${srcName} towards ${tgtName}...`;
+            this.controls.setStatus(`Routing ${step.net.name} (${srcName} ➜ ${tgtName})...`, 'running');
+            this.controls.updateSearchHud({
+                net: step.net,
+                action: 'Start',
+                currentNode: step.startNodeId,
+                currentPath: [step.startNodeId],
+                treeEdges: [],
+                explanation: expl
+            });
+            this._captureSnapshot(step, expl);
+        } else if (step.type === 'search_step' || step.type === 'step') {
+            this.currentActiveNet = step.net;
+            this.canvas.setSearchState(
+                step.visited,
+                step.frontier,
+                step.currentNode,
+                step.currentPath,
+                step.treeEdges,
+                {
+                    treeEdgesF: step.treeEdgesF,
+                    treeEdgesB: step.treeEdgesB,
+                    net: step.net,
+                    direction: step.direction,
+                    meta: step
+                }
+            );
+
+            const c = this.grid.toCoord(step.currentNode);
+            const fVal = step.f !== undefined ? `f=${step.f.toFixed(1)}mm` : `step`;
+            const branchCount = step.treeEdges ? step.treeEdges.length : 0;
+            const expl = `Exploring node (${c?.x}, ${c?.y}) [${fVal}] • ${branchCount} branch paths visited in search tree`;
+
             this.controls.updateMetrics({
                 netsRouted: this.routedDataMap.size,
                 netsTotal: this.nets.length,
                 totalNodesExplored: step.totalNodesExplored
             });
+            this.controls.updateSearchHud({
+                net: step.net,
+                action: step.action || 'Explore',
+                currentNode: step.currentNode,
+                currentPath: step.currentPath,
+                treeEdges: step.treeEdges,
+                depth: step.depth,
+                g: step.g,
+                h: step.h,
+                f: step.f,
+                explanation: expl
+            });
+
+            this._captureSnapshot(step, expl);
         } else if (step.type === 'net_routed') {
             // Net successfully placed
             const net = this.nets.find(n => n.id === step.net.id);
@@ -331,8 +535,29 @@ class PcbApp {
             this.controls.renderNetlist(this.nets, this.routedDataMap);
             this.canvas.clearSearchState();
             this.canvas.setCircuit(this.components, this.nets);
+
+            const expl = `Goal pin reached! Committed trace for ${step.net.name} (${step.path.length} cells, ${step.cost.toFixed(1)}mm).`;
+            this.controls.setStatus(expl, 'ready');
+            this.controls.updateSearchHud({
+                net: step.net,
+                action: 'Routed',
+                currentNode: step.path[step.path.length - 1],
+                currentPath: step.path,
+                cost: step.cost,
+                g: step.cost,
+                f: step.cost,
+                explanation: expl
+            });
+            this._captureSnapshot(step, expl);
         } else if (step.type === 'conflict_detected') {
-            this.controls.setStatus(`Conflict detected on ${step.net.name}! Initiating Rip-Up...`, 'conflict');
+            const expl = `Conflict detected on ${step.net.name}! Path blocked by existing traces. Initiating Rip-Up...`;
+            this.controls.setStatus(expl, 'conflict');
+            this.controls.updateSearchHud({
+                net: step.net,
+                action: 'Conflict',
+                explanation: expl
+            });
+            this._captureSnapshot(step, expl);
         } else if (step.type === 'ripup_performed') {
             // Track ripped path as dotted historical trace
             if (step.rippedNet && step.rippedPath) {
@@ -344,9 +569,24 @@ class PcbApp {
             this.routedDataMap.delete(step.rippedNet.id);
             this.controls.renderNetlist(this.nets, this.routedDataMap);
             this.canvas.setCircuit(this.components, this.nets);
-            this.controls.setStatus(`Ripped up ${step.rippedNet.name}. Rerouting with congestion penalty...`, 'conflict');
+
+            const expl = `Ripped up ${step.rippedNet.name}. Applied congestion penalty to corridor. Re-queuing...`;
+            this.controls.setStatus(expl, 'conflict');
+            this.controls.updateSearchHud({
+                net: step.rippedNet,
+                action: 'Rip-Up',
+                explanation: expl
+            });
+            this._captureSnapshot(step, expl);
         } else if (step.type === 'net_unroutable') {
-            this.controls.setStatus(`Net ${step.net.name} is topologically unroutable (planar conflict)`, 'conflict');
+            const expl = `Net ${step.net.name} is topologically unroutable (planar obstacle crossing).`;
+            this.controls.setStatus(expl, 'conflict');
+            this.controls.updateSearchHud({
+                net: step.net,
+                action: 'Blocked',
+                explanation: expl
+            });
+            this._captureSnapshot(step, expl);
         }
     }
 

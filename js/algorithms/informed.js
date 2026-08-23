@@ -34,6 +34,7 @@ function markSolutionTree(goalTreeNode) {
 }
 
 /**
+ * /**
  * Greedy Best-First Search
  * Prioritizes nodes strictly by heuristic h(n) = distance to goal
  */
@@ -42,6 +43,7 @@ export function* searchGreedy(bridge, startNodeId, goalNodeId, netId, targetPinI
     const startCoord = bridge.grid.toCoord(startNodeId);
     const initialH = bridge.heuristic(startNodeId, goalNodeId, heuristicType);
     const rootTree = createTreeNode(startNodeId, startCoord, 0, 0, initialH, null);
+    const treeEdges = [];
 
     const pq = new MinPriorityQueue();
     pq.push({ nodeId: startNodeId, treeNode: rootTree, path: [startNodeId], cost: 0, h: initialH }, initialH);
@@ -59,27 +61,35 @@ export function* searchGreedy(bridge, startNodeId, goalNodeId, netId, targetPinI
         if (current.nodeId === goalNodeId) {
             markSolutionTree(current.treeNode);
             yield {
+                type: 'step',
+                currentNode: current.nodeId,
+                currentPath: [...current.path],
+                treeEdges: [...treeEdges],
+                currentH: current.h,
+                g: current.cost,
+                h: current.h,
+                f: current.h,
+                depth: current.treeNode.depth,
+                frontier: pq.getItems().map(item => item.nodeId),
+                visited: Array.from(visited),
+                nodesExplored,
+                action: 'goal_reached',
+                tree: rootTree
+            };
+            yield {
                 type: 'finish',
                 success: true,
                 path: current.path,
+                currentPath: [...current.path],
+                treeEdges: [...treeEdges],
                 frontier: pq.getItems().map(item => item.nodeId),
                 visited: Array.from(visited),
                 nodesExplored,
                 cost: current.cost,
                 tree: rootTree
             };
-            return { success: true, path: current.path, nodesExplored, cost: current.cost, tree: rootTree };
+            return { success: true, path: current.path, nodesExplored, cost: current.cost, tree: rootTree, treeEdges };
         }
-
-        yield {
-            type: 'step',
-            currentNode: current.nodeId,
-            currentH: current.h,
-            frontier: pq.getItems().map(item => item.nodeId),
-            visited: Array.from(visited),
-            nodesExplored,
-            tree: rootTree
-        };
 
         const neighbors = bridge.getNeighbors(current.nodeId, netId, targetPinId, current.path[current.path.length - 2]);
         for (const n of neighbors) {
@@ -88,6 +98,8 @@ export function* searchGreedy(bridge, startNodeId, goalNodeId, netId, targetPinI
                 const nCoord = bridge.grid.toCoord(n.id);
                 const nTreeNode = createTreeNode(n.id, nCoord, current.treeNode.depth + 1, current.cost + n.cost, h, current.treeNode, n.dir);
                 current.treeNode.children.push(nTreeNode);
+
+                treeEdges.push({ from: current.nodeId, to: n.id, cost: n.cost, h, dir: n.dir });
 
                 pq.push({
                     nodeId: n.id,
@@ -98,10 +110,27 @@ export function* searchGreedy(bridge, startNodeId, goalNodeId, netId, targetPinI
                 }, h);
             }
         }
+
+        yield {
+            type: 'step',
+            currentNode: current.nodeId,
+            currentPath: [...current.path],
+            treeEdges: [...treeEdges],
+            currentH: current.h,
+            g: current.cost,
+            h: current.h,
+            f: current.h,
+            depth: current.treeNode.depth,
+            frontier: pq.getItems().map(item => item.nodeId),
+            visited: Array.from(visited),
+            nodesExplored,
+            action: 'expand',
+            tree: rootTree
+        };
     }
 
-    yield { type: 'finish', success: false, path: [], nodesExplored, cost: 0, tree: rootTree };
-    return { success: false, path: [], nodesExplored, cost: 0, tree: rootTree };
+    yield { type: 'finish', success: false, path: [], currentPath: [], treeEdges: [...treeEdges], nodesExplored, cost: 0, tree: rootTree };
+    return { success: false, path: [], nodesExplored, cost: 0, tree: rootTree, treeEdges };
 }
 
 /**
@@ -113,6 +142,7 @@ export function* searchAStar(bridge, startNodeId, goalNodeId, netId, targetPinId
     const startCoord = bridge.grid.toCoord(startNodeId);
     const initialH = bridge.heuristic(startNodeId, goalNodeId, heuristicType);
     const rootTree = createTreeNode(startNodeId, startCoord, 0, 0, initialH, null);
+    const treeEdges = [];
 
     const pq = new MinPriorityQueue();
     pq.push({ nodeId: startNodeId, treeNode: rootTree, path: [startNodeId], g: 0, h: initialH }, initialH);
@@ -132,29 +162,34 @@ export function* searchAStar(bridge, startNodeId, goalNodeId, netId, targetPinId
         if (current.nodeId === goalNodeId) {
             markSolutionTree(current.treeNode);
             yield {
+                type: 'step',
+                currentNode: current.nodeId,
+                currentPath: [...current.path],
+                treeEdges: [...treeEdges],
+                g: current.g,
+                h: current.h,
+                f: current.g + current.h,
+                depth: current.treeNode.depth,
+                frontier: pq.getItems().map(item => item.nodeId),
+                visited: Array.from(visited),
+                nodesExplored,
+                action: 'goal_reached',
+                tree: rootTree
+            };
+            yield {
                 type: 'finish',
                 success: true,
                 path: current.path,
+                currentPath: [...current.path],
+                treeEdges: [...treeEdges],
                 frontier: pq.getItems().map(item => item.nodeId),
                 visited: Array.from(visited),
                 nodesExplored,
                 cost: current.g,
                 tree: rootTree
             };
-            return { success: true, path: current.path, nodesExplored, cost: current.g, tree: rootTree };
+            return { success: true, path: current.path, nodesExplored, cost: current.g, tree: rootTree, treeEdges };
         }
-
-        yield {
-            type: 'step',
-            currentNode: current.nodeId,
-            g: current.g,
-            h: current.h,
-            f: current.g + current.h,
-            frontier: pq.getItems().map(item => item.nodeId),
-            visited: Array.from(visited),
-            nodesExplored,
-            tree: rootTree
-        };
 
         const neighbors = bridge.getNeighbors(current.nodeId, netId, targetPinId, current.path[current.path.length - 2]);
         for (const n of neighbors) {
@@ -167,6 +202,8 @@ export function* searchAStar(bridge, startNodeId, goalNodeId, netId, targetPinId
                 const nTreeNode = createTreeNode(n.id, nCoord, current.treeNode.depth + 1, nextG, h, current.treeNode, n.dir);
                 current.treeNode.children.push(nTreeNode);
 
+                treeEdges.push({ from: current.nodeId, to: n.id, cost: n.cost, g: nextG, h, f, dir: n.dir });
+
                 pq.push({
                     nodeId: n.id,
                     treeNode: nTreeNode,
@@ -176,10 +213,26 @@ export function* searchAStar(bridge, startNodeId, goalNodeId, netId, targetPinId
                 }, f);
             }
         }
+
+        yield {
+            type: 'step',
+            currentNode: current.nodeId,
+            currentPath: [...current.path],
+            treeEdges: [...treeEdges],
+            g: current.g,
+            h: current.h,
+            f: current.g + current.h,
+            depth: current.treeNode.depth,
+            frontier: pq.getItems().map(item => item.nodeId),
+            visited: Array.from(visited),
+            nodesExplored,
+            action: 'expand',
+            tree: rootTree
+        };
     }
 
-    yield { type: 'finish', success: false, path: [], nodesExplored, cost: 0, tree: rootTree };
-    return { success: false, path: [], nodesExplored, cost: 0, tree: rootTree };
+    yield { type: 'finish', success: false, path: [], currentPath: [], treeEdges: [...treeEdges], nodesExplored, cost: 0, tree: rootTree };
+    return { success: false, path: [], nodesExplored, cost: 0, tree: rootTree, treeEdges };
 }
 
 /**
@@ -194,10 +247,13 @@ export function* searchBidirectional(bridge, startNodeId, goalNodeId, netId, tar
     const rootForward = createTreeNode(startNodeId, startCoord, 0, 0, 0, null);
     const rootBackward = createTreeNode(goalNodeId, goalCoord, 0, 0, 0, null);
 
+    const treeEdgesF = [];
+    const treeEdgesB = [];
+
     if (startNodeId === goalNodeId) {
         rootForward.status = 'solution';
-        yield { type: 'finish', success: true, path: [startNodeId], nodesExplored: 1, cost: 0, tree: rootForward };
-        return { success: true, path: [startNodeId], nodesExplored: 1, cost: 0, tree: rootForward };
+        yield { type: 'finish', success: true, path: [startNodeId], nodesExplored: 1, cost: 0, tree: rootForward, treeEdges: [] };
+        return { success: true, path: [startNodeId], nodesExplored: 1, cost: 0, tree: rootForward, treeEdges: [] };
     }
 
     const queueF = [{ nodeId: startNodeId, treeNode: rootForward, path: [startNodeId], cost: 0 }];
@@ -235,26 +291,40 @@ export function* searchBidirectional(bridge, startNodeId, goalNodeId, netId, tar
                 markSolutionTree(currF.treeNode);
                 markSolutionTree(bInfo.treeNode);
 
+                const allEdges = [...treeEdgesF, ...treeEdgesB];
                 yield {
                     type: 'finish',
                     success: true,
                     path: fullPath,
+                    currentPath: fullPath,
+                    treeEdges: allEdges,
+                    treeEdgesF: [...treeEdgesF],
+                    treeEdgesB: [...treeEdgesB],
                     frontier: [...queueF.map(q => q.nodeId), ...queueB.map(q => q.nodeId)],
                     visited: [...Array.from(visitedF.keys()), ...Array.from(visitedB.keys())],
                     nodesExplored,
                     cost: totalCost,
                     tree: compositeRoot
                 };
-                return { success: true, path: fullPath, nodesExplored, cost: totalCost, tree: compositeRoot };
+                return { success: true, path: fullPath, nodesExplored, cost: totalCost, tree: compositeRoot, treeEdges: allEdges };
             }
 
             yield {
                 type: 'step',
                 direction: 'forward',
                 currentNode: currF.nodeId,
+                currentPath: [...currF.path],
+                treeEdges: [...treeEdgesF, ...treeEdgesB],
+                treeEdgesF: [...treeEdgesF],
+                treeEdgesB: [...treeEdgesB],
+                depth: currF.treeNode.depth,
+                g: currF.cost,
+                h: 0,
+                f: currF.cost,
                 frontier: [...queueF.map(q => q.nodeId), ...queueB.map(q => q.nodeId)],
                 visited: [...Array.from(visitedF.keys()), ...Array.from(visitedB.keys())],
                 nodesExplored,
+                action: 'expand',
                 tree: compositeRoot
             };
 
@@ -265,6 +335,8 @@ export function* searchBidirectional(bridge, startNodeId, goalNodeId, netId, tar
                     const nTreeNode = createTreeNode(n.id, nCoord, currF.treeNode.depth + 1, currF.cost + n.cost, 0, currF.treeNode, n.dir);
                     currF.treeNode.children.push(nTreeNode);
 
+                    treeEdgesF.push({ from: currF.nodeId, to: n.id, cost: n.cost, dir: n.dir, direction: 'forward' });
+
                     const nextPath = [...currF.path, n.id];
                     const nextCost = currF.cost + n.cost;
 
@@ -274,24 +346,29 @@ export function* searchBidirectional(bridge, startNodeId, goalNodeId, netId, tar
                     // Check if newly discovered neighbor meets backward frontier
                     if (visitedB.has(n.id)) {
                         const bInfo = visitedB.get(n.id);
-                        const bPathReversed = [...bInfo.path].reverse().slice(1);
+                        const bPathReversed = [...nextPath].reverse().slice(1);
                         const fullPath = [...nextPath, ...bPathReversed];
                         const totalCost = nextCost + bInfo.cost;
 
                         markSolutionTree(nTreeNode);
                         markSolutionTree(bInfo.treeNode);
 
+                        const allEdges = [...treeEdgesF, ...treeEdgesB];
                         yield {
                             type: 'finish',
                             success: true,
                             path: fullPath,
+                            currentPath: fullPath,
+                            treeEdges: allEdges,
+                            treeEdgesF: [...treeEdgesF],
+                            treeEdgesB: [...treeEdgesB],
                             frontier: [...queueF.map(q => q.nodeId), ...queueB.map(q => q.nodeId)],
                             visited: [...Array.from(visitedF.keys()), ...Array.from(visitedB.keys())],
                             nodesExplored: nodesExplored + 1,
                             cost: totalCost,
                             tree: compositeRoot
                         };
-                        return { success: true, path: fullPath, nodesExplored: nodesExplored + 1, cost: totalCost, tree: compositeRoot };
+                        return { success: true, path: fullPath, nodesExplored: nodesExplored + 1, cost: totalCost, tree: compositeRoot, treeEdges: allEdges };
                     }
                 }
             }
@@ -313,26 +390,40 @@ export function* searchBidirectional(bridge, startNodeId, goalNodeId, netId, tar
                 markSolutionTree(fInfo.treeNode);
                 markSolutionTree(currB.treeNode);
 
+                const allEdges = [...treeEdgesF, ...treeEdgesB];
                 yield {
                     type: 'finish',
                     success: true,
                     path: fullPath,
+                    currentPath: fullPath,
+                    treeEdges: allEdges,
+                    treeEdgesF: [...treeEdgesF],
+                    treeEdgesB: [...treeEdgesB],
                     frontier: [...queueF.map(q => q.nodeId), ...queueB.map(q => q.nodeId)],
                     visited: [...Array.from(visitedF.keys()), ...Array.from(visitedB.keys())],
                     nodesExplored,
                     cost: totalCost,
                     tree: compositeRoot
                 };
-                return { success: true, path: fullPath, nodesExplored, cost: totalCost, tree: compositeRoot };
+                return { success: true, path: fullPath, nodesExplored, cost: totalCost, tree: compositeRoot, treeEdges: allEdges };
             }
 
             yield {
                 type: 'step',
                 direction: 'backward',
                 currentNode: currB.nodeId,
+                currentPath: [...currB.path],
+                treeEdges: [...treeEdgesF, ...treeEdgesB],
+                treeEdgesF: [...treeEdgesF],
+                treeEdgesB: [...treeEdgesB],
+                depth: currB.treeNode.depth,
+                g: currB.cost,
+                h: 0,
+                f: currB.cost,
                 frontier: [...queueF.map(q => q.nodeId), ...queueB.map(q => q.nodeId)],
                 visited: [...Array.from(visitedF.keys()), ...Array.from(visitedB.keys())],
                 nodesExplored,
+                action: 'expand',
                 tree: compositeRoot
             };
 
@@ -343,6 +434,8 @@ export function* searchBidirectional(bridge, startNodeId, goalNodeId, netId, tar
                     const nCoord = bridge.grid.toCoord(n.id);
                     const nTreeNode = createTreeNode(n.id, nCoord, currB.treeNode.depth + 1, currB.cost + n.cost, 0, currB.treeNode, n.dir);
                     currB.treeNode.children.push(nTreeNode);
+
+                    treeEdgesB.push({ from: currB.nodeId, to: n.id, cost: n.cost, dir: n.dir, direction: 'backward' });
 
                     const nextPath = [...currB.path, n.id];
                     const nextCost = currB.cost + n.cost;
@@ -359,23 +452,29 @@ export function* searchBidirectional(bridge, startNodeId, goalNodeId, netId, tar
                         markSolutionTree(fInfo.treeNode);
                         markSolutionTree(nTreeNode);
 
+                        const allEdges = [...treeEdgesF, ...treeEdgesB];
                         yield {
                             type: 'finish',
                             success: true,
                             path: fullPath,
+                            currentPath: fullPath,
+                            treeEdges: allEdges,
+                            treeEdgesF: [...treeEdgesF],
+                            treeEdgesB: [...treeEdgesB],
                             frontier: [...queueF.map(q => q.nodeId), ...queueB.map(q => q.nodeId)],
                             visited: [...Array.from(visitedF.keys()), ...Array.from(visitedB.keys())],
                             nodesExplored: nodesExplored + 1,
                             cost: totalCost,
                             tree: compositeRoot
                         };
-                        return { success: true, path: fullPath, nodesExplored: nodesExplored + 1, cost: totalCost, tree: compositeRoot };
+                        return { success: true, path: fullPath, nodesExplored: nodesExplored + 1, cost: totalCost, tree: compositeRoot, treeEdges: allEdges };
                     }
                 }
             }
         }
     }
 
-    yield { type: 'finish', success: false, path: [], nodesExplored, cost: 0, tree: compositeRoot };
-    return { success: false, path: [], nodesExplored, cost: 0, tree: compositeRoot };
+    const allEdges = [...treeEdgesF, ...treeEdgesB];
+    yield { type: 'finish', success: false, path: [], currentPath: [], treeEdges: allEdges, nodesExplored, cost: 0, tree: compositeRoot };
+    return { success: false, path: [], nodesExplored, cost: 0, tree: compositeRoot, treeEdges: allEdges };
 }
