@@ -82,9 +82,20 @@ export class PcbControls {
         // Playback buttons
         this.btnRoute = document.getElementById('btn-route');
         this.btnStep = document.getElementById('btn-step');
+        this.btnStepBack = document.getElementById('btn-step-back');
         this.btnReset = document.getElementById('btn-reset');
         this.speedSlider = document.getElementById('speed-slider');
         this.speedValue = document.getElementById('speed-value');
+
+        // Search Step HUD elements
+        this.hudNetBadge = document.getElementById('hud-net-badge');
+        this.hudActionBadge = document.getElementById('hud-action-badge');
+        this.hudNodeCoord = document.getElementById('hud-node-coord');
+        this.hudDepthEdges = document.getElementById('hud-depth-edges');
+        this.hudGVal = document.getElementById('hud-g-val');
+        this.hudHVal = document.getElementById('hud-h-val');
+        this.hudFVal = document.getElementById('hud-f-val');
+        this.hudExplanation = document.getElementById('hud-explanation');
 
         // Preset selector
         this.presetSelect = document.getElementById('preset-select');
@@ -110,6 +121,9 @@ export class PcbControls {
         this.btnExportSvg = document.getElementById('btn-export-svg');
         this.btnExportJson = document.getElementById('btn-export-json');
         this.btnExportCsv = document.getElementById('btn-export-csv');
+
+        // Canvas View Controls
+        this.btnCanvasResetView = document.getElementById('btn-canvas-reset-view');
 
         this._attachEventListeners();
         this.updateAlgorithmInfo(this.app?.currentAlgorithm || 'astar');
@@ -162,6 +176,12 @@ export class PcbControls {
         if (this.btnStep) {
             this.btnStep.addEventListener('click', () => {
                 this.app.stepRoute();
+            });
+        }
+
+        if (this.btnStepBack) {
+            this.btnStepBack.addEventListener('click', () => {
+                this.app.stepBack();
             });
         }
 
@@ -218,6 +238,14 @@ export class PcbControls {
         }
         if (this.btnExportCsv) {
             this.btnExportCsv.addEventListener('click', () => this.exportCsv());
+        }
+
+        // Canvas View Controls
+        if (this.btnCanvasResetView) {
+            this.btnCanvasResetView.addEventListener('click', () => {
+                this.app.canvas.resetView();
+                this.setStatus('PCB Centered & View Reset', 'ready');
+            });
         }
     }
 
@@ -567,6 +595,58 @@ export class PcbControls {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+    }
+
+    updateSearchHud(info = {}) {
+        if (!this.hudNetBadge) return;
+
+        if (info.net) {
+            const srcName = this.getFriendlyPinName(info.net.source);
+            const tgtName = this.getFriendlyPinName(info.net.target);
+            this.hudNetBadge.textContent = `${srcName} ➜ ${tgtName}`;
+        } else {
+            this.hudNetBadge.textContent = 'No Net Active';
+        }
+
+        if (this.hudActionBadge) {
+            const action = info.action || (info.currentNode !== undefined && info.currentNode !== null ? 'Exploring' : 'Ready');
+            this.hudActionBadge.textContent = action;
+            this.hudActionBadge.className = `hud-action-badge action-${action.toLowerCase().replace(/[^a-z]/g, '')}`;
+        }
+
+        if (this.hudNodeCoord) {
+            if (info.currentNode !== undefined && info.currentNode !== null) {
+                const c = this.app.grid.toCoord(info.currentNode);
+                this.hudNodeCoord.textContent = c ? `(${c.x}, ${c.y}) [${c.x * 5}mm, ${c.y * 5}mm]` : '--';
+            } else {
+                this.hudNodeCoord.textContent = '--';
+            }
+        }
+
+        if (this.hudDepthEdges) {
+            const depth = info.depth !== undefined ? info.depth : (info.currentPath ? info.currentPath.length - 1 : 0);
+            const edges = info.treeEdges ? info.treeEdges.length : 0;
+            this.hudDepthEdges.textContent = `Depth ${depth} • ${edges} Tree Branches`;
+        }
+
+        if (this.hudGVal) {
+            const g = info.g !== undefined ? info.g : (info.cost !== undefined ? info.cost : 0);
+            this.hudGVal.textContent = `${g.toFixed(1)} mm`;
+        }
+
+        if (this.hudHVal) {
+            const h = info.h !== undefined ? info.h : 0;
+            this.hudHVal.textContent = `${h.toFixed(1)} mm`;
+        }
+
+        if (this.hudFVal) {
+            const f = info.f !== undefined ? info.f : ((info.g || 0) + (info.h || 0));
+            this.hudFVal.textContent = `${f.toFixed(1)} mm`;
+        }
+
+        if (this.hudExplanation) {
+            this.hudExplanation.textContent = info.explanation || 'Stepping through search tree nodes and pin paths...';
+        }
     }
 
     updateMetrics(data) {

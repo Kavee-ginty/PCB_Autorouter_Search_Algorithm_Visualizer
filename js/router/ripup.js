@@ -78,9 +78,9 @@ export class RipUpRouter {
                 if (step.value.type === 'step') {
                     totalNodesExplored++;
                     yield {
+                        ...step.value,
                         type: 'search_step',
                         net: currentNet,
-                        ...step.value,
                         totalNodesExplored
                     };
                 }

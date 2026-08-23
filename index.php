@@ -106,11 +106,14 @@
                 </button>
 
                 <div class="btn-group">
-                    <button id="btn-step" class="btn btn-secondary">
-                        <i data-lucide="step-forward"></i> Single Step
+                    <button id="btn-step-back" class="btn btn-secondary" title="Step Back to Previous Node">
+                        <i data-lucide="step-back"></i> Step Back
                     </button>
-                    <button id="btn-reset" class="btn btn-danger">
-                        <i data-lucide="rotate-ccw"></i> Reset Traces
+                    <button id="btn-step" class="btn btn-secondary" title="Step Forward to Next Node">
+                        <i data-lucide="step-forward"></i> Step Next
+                    </button>
+                    <button id="btn-reset" class="btn btn-danger" title="Reset Traces">
+                        <i data-lucide="rotate-ccw"></i> Reset
                     </button>
                 </div>
 
@@ -167,6 +170,13 @@
 
         <!-- Center Canvas PCB Board -->
         <section class="canvas-workspace">
+            <!-- Canvas Floating View Controls -->
+            <div class="canvas-controls-overlay">
+                <button id="btn-canvas-reset-view" class="canvas-btn-icon" title="Reset View & Center PCB">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                </button>
+            </div>
+
             <canvas id="pcb-canvas"></canvas>
             <div class="canvas-hint">
                 <i data-lucide="info" style="width: 14px; height: 14px;"></i>
@@ -180,7 +190,7 @@
             <!-- Real-Time Metrics -->
             <div class="panel-section">
                 <div class="section-header">
-                    <i data-lucide="bar-chart-2"></i> Performance HUD
+                    <i data-lucide="bar-chart-2"></i> Performance Metrics
                 </div>
                 <div class="metrics-grid">
                     <div class="metric-card">
