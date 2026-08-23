@@ -1,0 +1,18 @@
+# Vercel Ignore File
+# Exclude heavy native binaries and offline tools
+
+.git
+.dist
+graphify-out
+database/*.sqlite
+database/*.sqlite-journal
+
+# Windows Desktop Launcher / WebView2 Binaries
+aisearch-v2/tools/webview2/
+aisearch-v2/release/
+aisearch-v2/build-windows-exe.ps1
+aisearch-v2/start-server.bat
+aisearch-v2/start-server.sh
+
+# Batch / Local helper scripts
+start-server.bat

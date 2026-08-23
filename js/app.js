@@ -57,26 +57,104 @@ class PcbApp {
 
     async fetchPresets() {
         try {
-            const res = await fetch('api/presets.php');
-            const json = await res.json();
-            if (json.success && json.data) {
-                this.presets = json.data;
-                const select = document.getElementById('preset-select');
-                if (select) {
-                    select.innerHTML = '<option value="" disabled>-- Select Preset Circuit --</option>';
-                    json.data.forEach((p, idx) => {
-                        const opt = document.createElement('option');
-                        opt.value = p.id;
-                        opt.textContent = p.name;
-                        if (idx === 0) opt.selected = true;
-                        select.appendChild(opt);
-                    });
+            let res = await fetch('api/presets').catch(() => null);
+            if (!res || !res.ok) {
+                res = await fetch('api/presets.php').catch(() => null);
+            }
+            if (res && res.ok) {
+                const json = await res.json();
+                if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+                    this.presets = json.data;
+                    this._populatePresetDropdown(json.data);
+                    return;
                 }
             }
         } catch (e) {
-            console.warn('Could not load presets from backend, using fallback:', e);
-            this.loadFallbackCircuit();
+            console.warn('Could not load presets from backend, using built-in presets:', e);
         }
+
+        // Built-in presets fallback
+        this.presets = this._getBuiltinPresets();
+        this._populatePresetDropdown(this.presets);
+    }
+
+    _populatePresetDropdown(presetList) {
+        const select = document.getElementById('preset-select');
+        if (select) {
+            select.innerHTML = '<option value="" disabled>-- Select Preset Circuit --</option>';
+            presetList.forEach((p, idx) => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.name;
+                if (idx === 0) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+    }
+
+    _getBuiltinPresets() {
+        return [
+            {
+                id: 1,
+                name: 'Automatic Night Light Circuit (Default)',
+                description: 'Standard series loop connecting Battery -> Switch -> Light Sensor (LDR) -> Current Limiting Resistor -> LED -> Battery Ground.',
+                circuit_type: 'series',
+                components: [
+                    { id: 'bat_1', type: 'battery', name: 'Battery (BT1)', x: 1, y: 1, orientation: 'horizontal', pins: [{ id: 'B+', label: '+', x: 1, y: 1, type: 'power' }, { id: 'B-', label: '-', x: 3, y: 1, type: 'ground' }] },
+                    { id: 'sw_1', type: 'switch', name: 'Power Switch (S1)', x: 5, y: 1, orientation: 'horizontal', pins: [{ id: 'S1-A', label: '+', x: 5, y: 1, type: 'signal' }, { id: 'S1-B', label: '-', x: 6, y: 1, type: 'signal' }] },
+                    { id: 'ldr_1', type: 'sensor', name: 'Light Sensor (RLDR)', x: 8, y: 3, orientation: 'vertical', pins: [{ id: 'L-in', label: '+', x: 8, y: 3, type: 'signal' }, { id: 'L-out', label: '-', x: 8, y: 4, type: 'signal' }] },
+                    { id: 'res_1', type: 'resistor', name: 'Current Resistor (R1)', x: 5, y: 6, orientation: 'horizontal', pins: [{ id: 'R-in', label: '', x: 5, y: 6, type: 'signal' }, { id: 'R-out', label: '', x: 6, y: 6, type: 'signal' }] },
+                    { id: 'led_1', type: 'led', name: 'Indicator LED (D1)', x: 1, y: 5, orientation: 'vertical', pins: [{ id: 'D-A', label: '+', x: 1, y: 5, type: 'anode' }, { id: 'D-K', label: '-', x: 1, y: 6, type: 'cathode' }] }
+                ],
+                netlist: [
+                    { id: 'net_1', name: 'Net 1 (VCC)', source: 'B+', target: 'S1-A', color: '#ef4444' },
+                    { id: 'net_2', name: 'Net 2 (Switched)', source: 'S1-B', target: 'L-in', color: '#f59e0b' },
+                    { id: 'net_3', name: 'Net 3 (Sensor Out)', source: 'L-out', target: 'R-in', color: '#10b981' },
+                    { id: 'net_4', name: 'Net 4 (LED Anode)', source: 'R-out', target: 'D-A', color: '#3b82f6' },
+                    { id: 'net_5', name: 'Net 5 (GND Return)', source: 'D-K', target: 'B-', color: '#8b5cf6' }
+                ]
+            },
+            {
+                id: 2,
+                name: 'Dense Routing Benchmark',
+                description: 'Compact placement in center with narrow corridors to test shortest path algorithms.',
+                circuit_type: 'dense',
+                components: [
+                    { id: 'bat_1', type: 'battery', name: 'Battery (BT1)', x: 2, y: 2, orientation: 'horizontal', pins: [{ id: 'B+', label: '+', x: 2, y: 2, type: 'power' }, { id: 'B-', label: '-', x: 4, y: 2, type: 'ground' }] },
+                    { id: 'sw_1', type: 'switch', name: 'Power Switch (S1)', x: 6, y: 2, orientation: 'horizontal', pins: [{ id: 'S1-A', label: '+', x: 6, y: 2, type: 'signal' }, { id: 'S1-B', label: '-', x: 7, y: 2, type: 'signal' }] },
+                    { id: 'ldr_1', type: 'sensor', name: 'Light Sensor (RLDR)', x: 6, y: 4, orientation: 'vertical', pins: [{ id: 'L-in', label: '+', x: 6, y: 4, type: 'signal' }, { id: 'L-out', label: '-', x: 6, y: 5, type: 'signal' }] },
+                    { id: 'res_1', type: 'resistor', name: 'Current Resistor (R1)', x: 4, y: 5, orientation: 'horizontal', pins: [{ id: 'R-in', label: '', x: 4, y: 5, type: 'signal' }, { id: 'R-out', label: '', x: 5, y: 5, type: 'signal' }] },
+                    { id: 'led_1', type: 'led', name: 'Indicator LED (D1)', x: 2, y: 4, orientation: 'vertical', pins: [{ id: 'D-A', label: '+', x: 2, y: 4, type: 'anode' }, { id: 'D-K', label: '-', x: 2, y: 5, type: 'cathode' }] }
+                ],
+                netlist: [
+                    { id: 'net_1', name: 'Net 1 (VCC)', source: 'B+', target: 'S1-A', color: '#ef4444' },
+                    { id: 'net_2', name: 'Net 2 (Switched)', source: 'S1-B', target: 'L-in', color: '#f59e0b' },
+                    { id: 'net_3', name: 'Net 3 (Sensor Out)', source: 'L-out', target: 'R-in', color: '#10b981' },
+                    { id: 'net_4', name: 'Net 4 (LED Anode)', source: 'R-out', target: 'D-A', color: '#3b82f6' },
+                    { id: 'net_5', name: 'Net 5 (GND Return)', source: 'D-K', target: 'B-', color: '#8b5cf6' }
+                ]
+            },
+            {
+                id: 3,
+                name: 'Rip-Up & Reroute Challenge',
+                description: 'Cross-configured pins that trigger trace conflicts, demonstrating automated deadlock rip-up & reroute logic.',
+                circuit_type: 'challenge',
+                components: [
+                    { id: 'bat_1', type: 'battery', name: 'Battery (BT1)', x: 1, y: 2, orientation: 'horizontal', pins: [{ id: 'B+', label: '+', x: 1, y: 2, type: 'power' }, { id: 'B-', label: '-', x: 3, y: 2, type: 'ground' }] },
+                    { id: 'sw_1', type: 'switch', name: 'Power Switch (S1)', x: 7, y: 5, orientation: 'horizontal', pins: [{ id: 'S1-A', label: '+', x: 7, y: 5, type: 'signal' }, { id: 'S1-B', label: '-', x: 8, y: 5, type: 'signal' }] },
+                    { id: 'ldr_1', type: 'sensor', name: 'Light Sensor (RLDR)', x: 7, y: 1, orientation: 'horizontal', pins: [{ id: 'L-in', label: '+', x: 7, y: 1, type: 'signal' }, { id: 'L-out', label: '-', x: 8, y: 1, type: 'signal' }] },
+                    { id: 'res_1', type: 'resistor', name: 'Current Resistor (R1)', x: 1, y: 5, orientation: 'horizontal', pins: [{ id: 'R-in', label: '', x: 1, y: 5, type: 'signal' }, { id: 'R-out', label: '', x: 2, y: 5, type: 'signal' }] },
+                    { id: 'led_1', type: 'led', name: 'Indicator LED (D1)', x: 4, y: 3, orientation: 'horizontal', pins: [{ id: 'D-A', label: '+', x: 4, y: 3, type: 'anode' }, { id: 'D-K', label: '-', x: 5, y: 3, type: 'cathode' }] }
+                ],
+                netlist: [
+                    { id: 'net_1', name: 'Net 1 (VCC Cross)', source: 'B+', target: 'S1-A', color: '#ef4444' },
+                    { id: 'net_2', name: 'Net 2 (Sensor Cross)', source: 'S1-B', target: 'L-in', color: '#f59e0b' },
+                    { id: 'net_3', name: 'Net 3 (Sensor Out)', source: 'L-out', target: 'R-in', color: '#10b981' },
+                    { id: 'net_4', name: 'Net 4 (LED Anode)', source: 'R-out', target: 'D-A', color: '#3b82f6' },
+                    { id: 'net_5', name: 'Net 5 (GND Return)', source: 'D-K', target: 'B-', color: '#8b5cf6' }
+                ]
+            }
+        ];
     }
 
     loadDefaultPreset() {
@@ -626,20 +704,30 @@ class PcbApp {
 
     async _logRoutingResult(summary) {
         try {
-            await fetch('api/boards.php?action=log', {
+            const payload = {
+                algorithm: this.currentAlgorithm,
+                nets_total: summary.netsTotal,
+                nets_routed: summary.netsRouted,
+                nodes_explored: summary.totalNodesExplored,
+                conflicts_detected: summary.totalConflicts,
+                ripups_performed: summary.totalRipups,
+                total_wire_length_mm: summary.totalWireLengthMm,
+                execution_time_ms: summary.executionTimeMs
+            };
+
+            let res = await fetch('api/boards?action=log', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    algorithm: this.currentAlgorithm,
-                    nets_total: summary.netsTotal,
-                    nets_routed: summary.netsRouted,
-                    nodes_explored: summary.totalNodesExplored,
-                    conflicts_detected: summary.totalConflicts,
-                    ripups_performed: summary.totalRipups,
-                    total_wire_length_mm: summary.totalWireLengthMm,
-                    execution_time_ms: summary.executionTimeMs
-                })
-            });
+                body: JSON.stringify(payload)
+            }).catch(() => null);
+
+            if (!res || !res.ok) {
+                await fetch('api/boards.php?action=log', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).catch(() => null);
+            }
         } catch (e) {
             console.log('Metrics logging skipped:', e);
         }
@@ -649,51 +737,135 @@ class PcbApp {
         const title = prompt('Enter a title for this board layout:', 'My Custom PCB Layout');
         if (!title) return;
 
+        const boardPayload = {
+            title: title.trim(),
+            components: this.components.map(c => c.toJSON()),
+            netlist: this.nets
+        };
+
+        // Always save to browser localStorage for offline & serverless resilience
         try {
-            const res = await fetch('api/boards.php', {
+            const localList = JSON.parse(localStorage.getItem('pcb_saved_boards') || '[]');
+            const localId = Date.now();
+            const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+            localList.unshift({
+                id: localId,
+                title: title.trim(),
+                created_at: nowStr,
+                updated_at: nowStr,
+                components: boardPayload.components,
+                netlist: boardPayload.netlist
+            });
+            localStorage.setItem('pcb_saved_boards', JSON.stringify(localList.slice(0, 30)));
+        } catch (e) {
+            console.warn('Could not cache board to localStorage:', e);
+        }
+
+        // Also try backend API
+        let apiSaved = false;
+        try {
+            let res = await fetch('api/boards', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title,
-                    components: this.components.map(c => c.toJSON()),
-                    netlist: this.nets
-                })
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert(`Board "${title}" saved successfully to SQLite database!`);
-            } else {
-                alert(`Error saving board: ${data.error}`);
+                body: JSON.stringify(boardPayload)
+            }).catch(() => null);
+
+            if (!res || !res.ok) {
+                res = await fetch('api/boards.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(boardPayload)
+                }).catch(() => null);
+            }
+
+            if (res && res.ok) {
+                const data = await res.json();
+                if (data.success) apiSaved = true;
             }
         } catch (e) {
-            alert('Failed to connect to PHP backend database.');
+            // Handled via local storage
         }
+
+        alert(`Board "${title}" saved successfully!`);
     }
 
     async showLoadBoardDialog() {
+        let boards = [];
+
+        // 1. Try remote API
         try {
-            const res = await fetch('api/boards.php');
-            const json = await res.json();
-            if (json.success && json.data && json.data.length > 0) {
-                const names = json.data.map(b => `#${b.id}: ${b.title} (${b.created_at})`).join('\n');
-                const selectedId = prompt(`Select Board ID to load:\n\n${names}`);
-                if (selectedId) {
-                    const boardRes = await fetch(`api/boards.php?id=${parseInt(selectedId, 10)}`);
-                    const boardJson = await boardRes.json();
-                    if (boardJson.success && boardJson.data) {
-                        this.applyPresetData({
-                            name: boardJson.data.title,
-                            components: boardJson.data.components,
-                            netlist: boardJson.data.netlist
-                        });
-                    }
+            let res = await fetch('api/boards').catch(() => null);
+            if (!res || !res.ok) {
+                res = await fetch('api/boards.php').catch(() => null);
+            }
+            if (res && res.ok) {
+                const json = await res.json();
+                if (json.success && Array.isArray(json.data)) {
+                    boards = json.data;
                 }
-            } else {
-                alert('No saved boards found in database. Save one first!');
             }
         } catch (e) {
-            alert('Failed to retrieve boards from backend.');
+            console.log('Remote boards lookup skipped:', e);
         }
+
+        // 2. Merge with localStorage boards
+        try {
+            const localList = JSON.parse(localStorage.getItem('pcb_saved_boards') || '[]');
+            if (Array.isArray(localList)) {
+                for (const lb of localList) {
+                    if (!boards.find(b => b.id == lb.id)) {
+                        boards.push(lb);
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('LocalStorage lookup skipped:', e);
+        }
+
+        if (boards.length === 0) {
+            alert('No saved boards found. Customize the circuit and click Save first!');
+            return;
+        }
+
+        const names = boards.map(b => `#${b.id}: ${b.title} (${b.created_at || 'Saved'})`).join('\n');
+        const selectedId = prompt(`Select Board ID to load:\n\n${names}`);
+        if (!selectedId) return;
+
+        const targetId = selectedId.trim().replace(/^#/, '');
+
+        // Check in-memory/localStorage list first
+        const localMatch = boards.find(b => String(b.id) === targetId && b.components && b.netlist);
+        if (localMatch) {
+            this.applyPresetData({
+                name: localMatch.title,
+                components: localMatch.components,
+                netlist: localMatch.netlist
+            });
+            return;
+        }
+
+        // Otherwise fetch full details from API
+        try {
+            let boardRes = await fetch(`api/boards?id=${encodeURIComponent(targetId)}`).catch(() => null);
+            if (!boardRes || !boardRes.ok) {
+                boardRes = await fetch(`api/boards.php?id=${encodeURIComponent(targetId)}`).catch(() => null);
+            }
+            if (boardRes && boardRes.ok) {
+                const boardJson = await boardRes.json();
+                if (boardJson.success && boardJson.data) {
+                    this.applyPresetData({
+                        name: boardJson.data.title,
+                        components: boardJson.data.components,
+                        netlist: boardJson.data.netlist
+                    });
+                    return;
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load board by id:', e);
+        }
+
+        alert(`Could not load board #${targetId}.`);
     }
 
     showAddNetDialog() {

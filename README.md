@@ -2,6 +2,8 @@
 
 An interactive AI-powered single-layer PCB autorouter and search algorithm visualizer. This tool demonstrates and benchmarks various artificial intelligence pathfinding and search algorithms on a discrete printed circuit board (PCB) grid, featuring dynamic component placement, trace routing, conflict resolution, and rip-up & reroute capabilities.
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
+
 ---
 
 ## 🚀 Features
@@ -24,54 +26,86 @@ An interactive AI-powered single-layer PCB autorouter and search algorithm visua
 - **Interactive Visualizer**:
   - Step-by-step path exploration and search tree visualization
   - Real-time performance metrics (nodes explored, path cost, execution time)
-  - Layout saving & loading via SQLite database
+  - Layout saving & loading via Serverless API and browser LocalStorage
+  - Multi-format exports (PNG, SVG, JSON, CSV)
   - Standalone Python AI Search Engine (`aisearch-v2`)
+
+---
+
+## ☁️ Deploying to Vercel
+
+The project is fully pre-configured for zero-configuration, production deployment on **Vercel**:
+
+### Option 1: One-Click Deploy via Vercel Web Dashboard
+1. Push your repository to GitHub / GitLab / Bitbucket.
+2. Go to [vercel.com/new](https://vercel.com/new) and import the repository.
+3. Keep default settings (Framework Preset: **Other**) and click **Deploy**.
+
+### Option 2: Deploy via Vercel CLI
+```bash
+npm install -g vercel
+vercel
+```
+For production release:
+```bash
+vercel --prod
+```
 
 ---
 
 ## 🛠️ Project Structure
 
 ```
-├── aisearch-v2/           # Standalone Python AI search engine & web visualizer
-├── api/                   # PHP backend API for board layouts, presets & SQLite database
-├── css/                   # Stylesheets for visualizer & search tree visualization
-├── database/              # SQLite database schema and persistent storage
+├── .vercelignore           # Ignore rules for lightweight Vercel builds
+├── vercel.json             # Vercel deployment configuration & API rewrites
+├── package.json            # Node.js manifest and test scripts
+├── index.html              # Main web visualizer interface (Production / Vercel)
+├── index.php               # Local PHP development interface
+├── api/
+│   ├── presets.js          # Vercel Serverless Function for circuit presets
+│   ├── boards.js           # Vercel Serverless Function for saved boards & logs
+│   ├── presets.php         # Local PHP presets endpoint
+│   ├── boards.php          # Local PHP boards endpoint
+│   └── db.php              # Local SQLite database initialization
+├── css/                    # Stylesheets for visualizer & search tree visualization
+├── database/               # SQLite database schema and persistent storage
 ├── js/
-│   ├── algorithms/        # Search algorithm implementations (BFS, DFS, A*, etc.)
-│   ├── core/              # Grid, component, and graph bridge logic
-│   ├── router/            # Multi-net router and conflict engine
-│   ├── ui/                # UI rendering and controls
-│   └── app.js             # Application entry point
-├── tests/                 # Node.js automated verification test suites
-├── index.php              # Main web visualizer interface
-├── start-server.bat       # Quick-start script for local PHP server
+│   ├── algorithms/         # Search algorithm implementations (BFS, DFS, A*, etc.)
+│   ├── core/               # Grid, component, and graph bridge logic
+│   ├── router/             # Multi-net router and conflict engine
+│   ├── ui/                 # UI rendering and controls
+│   └── app.js              # Application entry point
+├── tests/                  # Automated verification test suites
+├── aisearch-v2/            # Standalone Python AI search engine & web visualizer
+├── start-server.bat        # Quick-start script for local PHP server
 └── README.md
 ```
 
 ---
 
-## 🚦 Getting Started
-
-### Prerequisites
-- **PHP 8.x** (with PDO SQLite enabled)
-- **Node.js** (for running test suites)
-- **Python 3.x** (for `aisearch-v2` backend/tools, optional)
+## 🚦 Local Development
 
 ### Running the Web Visualizer
-1. Start the local PHP development server:
-   ```cmd
-   start-server.bat
-   ```
-   *Or manually:*
-   ```bash
-   php -S localhost:8000
-   ```
-2. Open your browser and navigate to:
-   ```
-   http://localhost:8000
-   ```
+
+**Option A: Local Static / Serverless Server (Node.js)**
+```bash
+npx serve .
+```
+
+**Option B: Local PHP Server**
+```cmd
+start-server.bat
+```
+*Or manually:*
+```bash
+php -S localhost:8000
+```
 
 ### Running Test Suites
+```bash
+npm test
+```
+*Or individually:*
 ```bash
 node tests/verify_algorithms.mjs
 node tests/verify_conflict_challenge.mjs
