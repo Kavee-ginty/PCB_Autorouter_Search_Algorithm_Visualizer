@@ -143,7 +143,8 @@ export class RipUpRouter {
                         ripUpHistory.push({
                             rippedNet: rippedData.net,
                             blockedNet: currentNet,
-                            cycle: ripUpCount
+                            cycle: ripUpCount,
+                            rippedPath: [...rippedData.path]
                         });
 
                         yield {
