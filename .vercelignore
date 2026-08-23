@@ -1,11 +1,15 @@
 # Vercel Ignore File
-# Exclude heavy native binaries and offline tools
+# Exclude heavy native binaries, local databases, and PHP files to prevent serverless naming conflicts
 
 .git
 .dist
 graphify-out
 database/*.sqlite
 database/*.sqlite-journal
+
+# Ignore PHP files on Vercel so only Node.js serverless functions are registered in /api
+*.php
+api/*.php
 
 # Windows Desktop Launcher / WebView2 Binaries
 aisearch-v2/tools/webview2/
