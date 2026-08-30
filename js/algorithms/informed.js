@@ -346,7 +346,7 @@ export function* searchBidirectional(bridge, startNodeId, goalNodeId, netId, tar
                     // Check if newly discovered neighbor meets backward frontier
                     if (visitedB.has(n.id)) {
                         const bInfo = visitedB.get(n.id);
-                        const bPathReversed = [...nextPath].reverse().slice(1);
+                        const bPathReversed = [...bInfo.path].reverse().slice(1);
                         const fullPath = [...nextPath, ...bPathReversed];
                         const totalCost = nextCost + bInfo.cost;
 
