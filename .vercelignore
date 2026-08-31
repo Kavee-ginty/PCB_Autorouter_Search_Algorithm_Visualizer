@@ -1,0 +1,22 @@
+# Vercel Ignore File
+# Exclude heavy native binaries, local databases, and PHP files to prevent serverless naming conflicts
+
+.git
+.dist
+graphify-out
+database/*.sqlite
+database/*.sqlite-journal
+
+# Ignore PHP files on Vercel so only Node.js serverless functions are registered in /api
+*.php
+api/*.php
+
+# Windows Desktop Launcher / WebView2 Binaries
+aisearch-v2/tools/webview2/
+aisearch-v2/release/
+aisearch-v2/build-windows-exe.ps1
+aisearch-v2/start-server.bat
+aisearch-v2/start-server.sh
+
+# Batch / Local helper scripts
+start-server.bat

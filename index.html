@@ -1,8 +1,3 @@
-<?php
-/**
- * index.php - Main entrypoint for PCB AutoRouting Visualizer
- */
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -141,22 +136,16 @@
                     <div class="legend-item"><img src="resources/Resistor.svg" class="legend-svg-thumb" alt="Resistor"> Resistor </div>
                     <div class="legend-item"><img src="resources/LED.svg" class="legend-svg-thumb" alt="LED"> LED </div>
                 </div>
-                <!-- <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
-                    💡 <em>Tip: Drag to move. Double-click or Right-click to rotate 90°.</em>
-                </p> -->
             </div>
 
-            <!-- Export Options Panel (Matching aisearch-v2) -->
+            <!-- Export Options Panel -->
             <div class="panel-section">
                 <div class="section-header">
                     <i data-lucide="download"></i> Export Options
                 </div>
                 <div class="export-options-grid">
-                    <button id="btn-export-png" class="btn btn-secondary btn-small" title="Export PCB & Search Trees as PNG">
-                        <i data-lucide="camera"></i> PCB PNG
-                    </button>
-                    <button id="btn-export-metrics-png" class="btn btn-secondary btn-small" title="Export Performance Metrics & Live Data Snapshot as PNG">
-                        <i data-lucide="file-image"></i> Data PNG
+                    <button id="btn-export-png" class="btn btn-secondary btn-small" title="Export as PNG Image">
+                        <i data-lucide="camera"></i> PNG
                     </button>
                     <button id="btn-export-svg" class="btn btn-secondary btn-small" title="Export as SVG Vector">
                         <i data-lucide="image"></i> SVG
@@ -193,15 +182,10 @@
             
             <!-- Real-Time Metrics -->
             <div class="panel-section">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div class="section-header" style="margin-bottom: 0;">
-                        <i data-lucide="bar-chart-2"></i> Performance Metrics
-                    </div>
-                    <button id="btn-export-metrics-card" class="btn btn-secondary" style="padding: 3px 8px; font-size: 0.72rem; display: flex; align-items: center; gap: 4px;" title="Take Screenshot PNG of Performance Metrics & Live Data">
-                        <i data-lucide="camera" style="width: 12px; height: 12px;"></i> Snapshot PNG
-                    </button>
+                <div class="section-header">
+                    <i data-lucide="bar-chart-2"></i> Performance Metrics
                 </div>
-                <div class="metrics-grid" style="margin-top: 8px;">
+                <div class="metrics-grid">
                     <div class="metric-card">
                         <span class="metric-label">Nets Routed</span>
                         <span id="metric-nets" class="metric-value">0/5</span>
@@ -225,53 +209,6 @@
                 </div>
             </div>
 
-            <!-- Live Data Panel (Matching aisearch-v2) -->
-            <div class="panel-section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <div class="section-header" style="margin-bottom: 0;">
-                        <i data-lucide="activity"></i> Live Data Panel
-                    </div>
-                    <span id="data-net-status" style="font-size: 0.7rem; font-weight: 700; color: var(--accent-primary); background: rgba(37,99,235,0.08); padding: 2px 7px; border-radius: var(--radius-full);">Live</span>
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 10px;">
-                    <label class="form-label" for="data-net-select" style="font-size: 0.72rem;">Inspect Trace / Net:</label>
-                    <select id="data-net-select" class="select-input select-small" style="padding: 5px 8px; font-size: 0.78rem;">
-                        <option value="active" selected>⚡ Active / Live Step</option>
-                    </select>
-                </div>
-
-                <div class="data-display">
-                    <div class="data-row">
-                        <span class="data-label">OPEN LIST (Frontier):</span>
-                        <div id="fringe-list" class="data-value"><span class="array-empty">Empty</span></div>
-                    </div>
-                    <div class="data-row">
-                        <span class="data-label">CLOSE LIST (Explored):</span>
-                        <div id="visited-list" class="data-value"><span class="array-empty">Empty</span></div>
-                    </div>
-                    <div class="data-row">
-                        <span class="data-label">Traversal Order:</span>
-                        <div id="traversal-list" class="data-value"><span class="array-empty">Empty</span></div>
-                    </div>
-                    <div class="data-row">
-                        <span class="data-label">Path Found:</span>
-                        <div id="path-list" class="data-value"><span class="array-empty">No path found yet</span></div>
-                    </div>
-                    <div id="informed-search-info" style="display: none;">
-                        <hr class="data-divider">
-                        <div class="data-row">
-                            <span class="data-label">Current Node f(n):</span>
-                            <div id="f-score" class="data-value">g(0) + h(0) = 0</div>
-                        </div>
-                        <div class="data-row">
-                            <span class="data-label">Path Cost So Far:</span>
-                            <div id="path-cost-current" class="data-value">0.0 mm</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Netlist / Connections Manager -->
             <div class="panel-section">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -288,7 +225,7 @@
                 </div>
             </div>
 
-            <!-- Algorithm Info Panel (Matching aisearch-v2) -->
+            <!-- Algorithm Info Panel -->
             <div class="panel-section">
                 <div class="section-header">
                     <i data-lucide="info"></i> Algorithm Info

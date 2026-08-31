@@ -1,0 +1,24 @@
+{
+  "name": "pcb-autorouter-search-algorithm-visualizer",
+  "version": "1.0.0",
+  "description": "Interactive AI-powered single-layer PCB autorouter and search algorithm visualizer",
+  "type": "module",
+  "main": "js/app.js",
+  "scripts": {
+    "test": "node tests/verify_algorithms.mjs && node tests/verify_conflict_challenge.mjs && node tests/verify_ripup.mjs",
+    "start": "node -e \"console.log('App ready for static and serverless serving.')\""
+  },
+  "keywords": [
+    "pcb",
+    "autorouter",
+    "search-algorithms",
+    "ai",
+    "pathfinding",
+    "astar",
+    "bfs",
+    "dfs",
+    "visualization"
+  ],
+  "author": "Kavee-ginty",
+  "license": "MIT"
+}

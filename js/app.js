@@ -32,9 +32,11 @@ class PcbApp {
         this.activeRouterGenerator = null;
         this.timerId = null;
         this.routedDataMap = new Map(); // netId -> routed summary
+        this.netSearchDataMap = new Map(); // netId -> search data snapshot (visited, traversal, path, cost)
         this.stepHistory = [];
         this.historyIndex = -1;
         this.currentActiveNet = null;
+        this.currentTraversal = [];
 
         this.canvasElement = document.getElementById('pcb-canvas');
         this.canvas = new PcbCanvas(this.canvasElement, this.grid, {
@@ -57,26 +59,104 @@ class PcbApp {
 
     async fetchPresets() {
         try {
-            const res = await fetch('api/presets.php');
-            const json = await res.json();
-            if (json.success && json.data) {
-                this.presets = json.data;
-                const select = document.getElementById('preset-select');
-                if (select) {
-                    select.innerHTML = '<option value="" disabled>-- Select Preset Circuit --</option>';
-                    json.data.forEach((p, idx) => {
-                        const opt = document.createElement('option');
-                        opt.value = p.id;
-                        opt.textContent = p.name;
-                        if (idx === 0) opt.selected = true;
-                        select.appendChild(opt);
-                    });
+            let res = await fetch('api/presets').catch(() => null);
+            if (!res || !res.ok) {
+                res = await fetch('api/presets.php').catch(() => null);
+            }
+            if (res && res.ok) {
+                const json = await res.json();
+                if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+                    this.presets = json.data;
+                    this._populatePresetDropdown(json.data);
+                    return;
                 }
             }
         } catch (e) {
-            console.warn('Could not load presets from backend, using fallback:', e);
-            this.loadFallbackCircuit();
+            console.warn('Could not load presets from backend, using built-in presets:', e);
         }
+
+        // Built-in presets fallback
+        this.presets = this._getBuiltinPresets();
+        this._populatePresetDropdown(this.presets);
+    }
+
+    _populatePresetDropdown(presetList) {
+        const select = document.getElementById('preset-select');
+        if (select) {
+            select.innerHTML = '<option value="" disabled>-- Select Preset Circuit --</option>';
+            presetList.forEach((p, idx) => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.name;
+                if (idx === 0) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+    }
+
+    _getBuiltinPresets() {
+        return [
+            {
+                id: 1,
+                name: 'Automatic Night Light Circuit (Default)',
+                description: 'Standard series loop connecting Battery -> Switch -> Light Sensor (LDR) -> Current Limiting Resistor -> LED -> Battery Ground.',
+                circuit_type: 'series',
+                components: [
+                    { id: 'bat_1', type: 'battery', name: 'Battery (BT1)', x: 1, y: 1, orientation: 'horizontal', pins: [{ id: 'B+', label: '+', x: 1, y: 1, type: 'power' }, { id: 'B-', label: '-', x: 3, y: 1, type: 'ground' }] },
+                    { id: 'sw_1', type: 'switch', name: 'Power Switch (S1)', x: 5, y: 1, orientation: 'horizontal', pins: [{ id: 'S1-A', label: '+', x: 5, y: 1, type: 'signal' }, { id: 'S1-B', label: '-', x: 6, y: 1, type: 'signal' }] },
+                    { id: 'ldr_1', type: 'sensor', name: 'Light Sensor (RLDR)', x: 8, y: 3, orientation: 'vertical', pins: [{ id: 'L-in', label: '+', x: 8, y: 3, type: 'signal' }, { id: 'L-out', label: '-', x: 8, y: 4, type: 'signal' }] },
+                    { id: 'res_1', type: 'resistor', name: 'Current Resistor (R1)', x: 5, y: 6, orientation: 'horizontal', pins: [{ id: 'R-in', label: '', x: 5, y: 6, type: 'signal' }, { id: 'R-out', label: '', x: 6, y: 6, type: 'signal' }] },
+                    { id: 'led_1', type: 'led', name: 'Indicator LED (D1)', x: 1, y: 5, orientation: 'vertical', pins: [{ id: 'D-A', label: '+', x: 1, y: 5, type: 'anode' }, { id: 'D-K', label: '-', x: 1, y: 6, type: 'cathode' }] }
+                ],
+                netlist: [
+                    { id: 'net_1', name: 'Net 1 (VCC)', source: 'B+', target: 'S1-A', color: '#ef4444' },
+                    { id: 'net_2', name: 'Net 2 (Switched)', source: 'S1-B', target: 'L-in', color: '#f59e0b' },
+                    { id: 'net_3', name: 'Net 3 (Sensor Out)', source: 'L-out', target: 'R-in', color: '#10b981' },
+                    { id: 'net_4', name: 'Net 4 (LED Anode)', source: 'R-out', target: 'D-A', color: '#3b82f6' },
+                    { id: 'net_5', name: 'Net 5 (GND Return)', source: 'D-K', target: 'B-', color: '#8b5cf6' }
+                ]
+            },
+            {
+                id: 2,
+                name: 'Dense Routing Benchmark',
+                description: 'Compact placement in center with narrow corridors to test shortest path algorithms.',
+                circuit_type: 'dense',
+                components: [
+                    { id: 'bat_1', type: 'battery', name: 'Battery (BT1)', x: 2, y: 2, orientation: 'horizontal', pins: [{ id: 'B+', label: '+', x: 2, y: 2, type: 'power' }, { id: 'B-', label: '-', x: 4, y: 2, type: 'ground' }] },
+                    { id: 'sw_1', type: 'switch', name: 'Power Switch (S1)', x: 6, y: 2, orientation: 'horizontal', pins: [{ id: 'S1-A', label: '+', x: 6, y: 2, type: 'signal' }, { id: 'S1-B', label: '-', x: 7, y: 2, type: 'signal' }] },
+                    { id: 'ldr_1', type: 'sensor', name: 'Light Sensor (RLDR)', x: 6, y: 4, orientation: 'vertical', pins: [{ id: 'L-in', label: '+', x: 6, y: 4, type: 'signal' }, { id: 'L-out', label: '-', x: 6, y: 5, type: 'signal' }] },
+                    { id: 'res_1', type: 'resistor', name: 'Current Resistor (R1)', x: 4, y: 5, orientation: 'horizontal', pins: [{ id: 'R-in', label: '', x: 4, y: 5, type: 'signal' }, { id: 'R-out', label: '', x: 5, y: 5, type: 'signal' }] },
+                    { id: 'led_1', type: 'led', name: 'Indicator LED (D1)', x: 2, y: 4, orientation: 'vertical', pins: [{ id: 'D-A', label: '+', x: 2, y: 4, type: 'anode' }, { id: 'D-K', label: '-', x: 2, y: 5, type: 'cathode' }] }
+                ],
+                netlist: [
+                    { id: 'net_1', name: 'Net 1 (VCC)', source: 'B+', target: 'S1-A', color: '#ef4444' },
+                    { id: 'net_2', name: 'Net 2 (Switched)', source: 'S1-B', target: 'L-in', color: '#f59e0b' },
+                    { id: 'net_3', name: 'Net 3 (Sensor Out)', source: 'L-out', target: 'R-in', color: '#10b981' },
+                    { id: 'net_4', name: 'Net 4 (LED Anode)', source: 'R-out', target: 'D-A', color: '#3b82f6' },
+                    { id: 'net_5', name: 'Net 5 (GND Return)', source: 'D-K', target: 'B-', color: '#8b5cf6' }
+                ]
+            },
+            {
+                id: 3,
+                name: 'Rip-Up & Reroute Challenge',
+                description: 'Cross-configured pins that trigger trace conflicts, demonstrating automated deadlock rip-up & reroute logic.',
+                circuit_type: 'challenge',
+                components: [
+                    { id: 'bat_1', type: 'battery', name: 'Battery (BT1)', x: 1, y: 2, orientation: 'horizontal', pins: [{ id: 'B+', label: '+', x: 1, y: 2, type: 'power' }, { id: 'B-', label: '-', x: 3, y: 2, type: 'ground' }] },
+                    { id: 'sw_1', type: 'switch', name: 'Power Switch (S1)', x: 7, y: 5, orientation: 'horizontal', pins: [{ id: 'S1-A', label: '+', x: 7, y: 5, type: 'signal' }, { id: 'S1-B', label: '-', x: 8, y: 5, type: 'signal' }] },
+                    { id: 'ldr_1', type: 'sensor', name: 'Light Sensor (RLDR)', x: 7, y: 1, orientation: 'horizontal', pins: [{ id: 'L-in', label: '+', x: 7, y: 1, type: 'signal' }, { id: 'L-out', label: '-', x: 8, y: 1, type: 'signal' }] },
+                    { id: 'res_1', type: 'resistor', name: 'Current Resistor (R1)', x: 1, y: 5, orientation: 'horizontal', pins: [{ id: 'R-in', label: '', x: 1, y: 5, type: 'signal' }, { id: 'R-out', label: '', x: 2, y: 5, type: 'signal' }] },
+                    { id: 'led_1', type: 'led', name: 'Indicator LED (D1)', x: 4, y: 3, orientation: 'horizontal', pins: [{ id: 'D-A', label: '+', x: 4, y: 3, type: 'anode' }, { id: 'D-K', label: '-', x: 5, y: 3, type: 'cathode' }] }
+                ],
+                netlist: [
+                    { id: 'net_1', name: 'Net 1 (VCC Cross)', source: 'B+', target: 'S1-A', color: '#ef4444' },
+                    { id: 'net_2', name: 'Net 2 (Sensor Cross)', source: 'S1-B', target: 'L-in', color: '#f59e0b' },
+                    { id: 'net_3', name: 'Net 3 (Sensor Out)', source: 'L-out', target: 'R-in', color: '#10b981' },
+                    { id: 'net_4', name: 'Net 4 (LED Anode)', source: 'R-out', target: 'D-A', color: '#3b82f6' },
+                    { id: 'net_5', name: 'Net 5 (GND Return)', source: 'D-K', target: 'B-', color: '#8b5cf6' }
+                ]
+            }
+        ];
     }
 
     loadDefaultPreset() {
@@ -192,6 +272,7 @@ class PcbApp {
         this.resetRouting();
         const info = ALGORITHMS[algo]?.name || algo;
         this.controls.setStatus(`Selected Algorithm: ${info}`, 'ready');
+        this.controls.resetLiveDataPanel();
     }
 
     setStepDelay(ms) {
@@ -321,6 +402,16 @@ class PcbApp {
             routedDataMap: new Map(this.routedDataMap),
             rippedPaths: [...this.canvas.rippedPaths],
             activeNet: step.net || this.currentActiveNet || null,
+            traversal: [...this.currentTraversal],
+            liveData: {
+                frontier: step.frontier ? [...step.frontier] : [],
+                visited: step.visited ? [...step.visited] : [],
+                traversal: [...this.currentTraversal],
+                path: step.path ? [...step.path] : (step.currentPath ? [...step.currentPath] : null),
+                g: step.g !== undefined ? step.g : (step.cost !== undefined ? step.cost : 0),
+                h: step.h !== undefined ? step.h : 0,
+                f: step.f !== undefined ? step.f : 0
+            },
             searchState: {
                 visited: step.visited ? [...step.visited] : [],
                 frontier: step.frontier ? [...step.frontier] : [],
@@ -406,10 +497,24 @@ class PcbApp {
         );
         this.canvas.setCircuit(this.components, this.nets);
 
-        // Restore controls & HUD
+        // Restore controls & HUD & Live Data
+        this.currentTraversal = snapshot.traversal ? [...snapshot.traversal] : [];
         this.controls.renderNetlist(this.nets, this.routedDataMap);
         this.controls.updateMetrics(snapshot.metrics);
         this.controls.updateSearchHud(snapshot.hudInfo);
+        this.controls.updateLiveDataPanel(
+            snapshot.liveData || {
+                frontier: snapshot.searchState.frontier,
+                visited: snapshot.searchState.visited,
+                traversal: this.currentTraversal,
+                path: snapshot.searchState.currentPath,
+                g: snapshot.hudInfo.g,
+                h: snapshot.hudInfo.h,
+                f: snapshot.hudInfo.f
+            },
+            this.grid,
+            this.currentAlgorithm
+        );
         this.controls.setStatus(snapshot.status.text, snapshot.status.type);
     }
 
@@ -429,9 +534,11 @@ class PcbApp {
         this.stepHistory = [];
         this.historyIndex = -1;
         this.currentActiveNet = null;
+        this.currentTraversal = [];
         this.grid.clearTraces();
         this.grid.resetPenalties();
         this.routedDataMap.clear();
+        this.netSearchDataMap.clear();
 
         for (const n of this.nets) {
             n.path = null;
@@ -453,6 +560,10 @@ class PcbApp {
             action: 'Ready',
             explanation: 'Ready to route. Click "Auto Route All" or "Step Next" to begin.'
         });
+        this.controls.resetLiveDataPanel();
+        if (this.controls.dataNetSelect) {
+            this.controls.renderInspectNetDropdown(this.nets, this.routedDataMap, 'active');
+        }
 
         const btn = document.getElementById('btn-route');
         if (btn) {
@@ -462,11 +573,83 @@ class PcbApp {
         this.controls.setStatus('Ready to Route', 'ready');
     }
 
+    _extractAllNodesFromTree(rootTree) {
+        if (!rootTree) return [];
+        const nodes = [];
+        const visitedIds = new Set();
+        const queue = [rootTree];
+        while (queue.length > 0) {
+            const curr = queue.shift();
+            if (curr.nodeId !== undefined && !visitedIds.has(curr.nodeId)) {
+                visitedIds.add(curr.nodeId);
+                nodes.push(curr.nodeId);
+            }
+            if (curr.children) {
+                for (const ch of curr.children) {
+                    queue.push(ch);
+                }
+            }
+        }
+        return nodes;
+    }
+
+    onInspectNetChanged(selectedNetId) {
+        if (!selectedNetId || selectedNetId === 'active') {
+            const latestSnapshot = (this.historyIndex >= 0 && this.stepHistory[this.historyIndex]) || 
+                                   this.stepHistory[this.stepHistory.length - 1];
+            if (latestSnapshot && latestSnapshot.liveData) {
+                this.controls.updateLiveDataPanel(latestSnapshot.liveData, this.grid, this.currentAlgorithm);
+            } else {
+                this.controls.resetLiveDataPanel();
+            }
+            this.controls.updateInspectStatusBadge('active');
+            return;
+        }
+
+        const net = this.nets.find(n => n.id === selectedNetId);
+        const routedInfo = this.routedDataMap.get(selectedNetId);
+        const searchData = this.netSearchDataMap.get(selectedNetId);
+
+        if (routedInfo && routedInfo.path) {
+            const visitedNodes = searchData?.visited?.length ? searchData.visited : 
+                                (routedInfo.tree ? this._extractAllNodesFromTree(routedInfo.tree) : routedInfo.path);
+            const traversalNodes = searchData?.traversal?.length ? searchData.traversal : visitedNodes;
+            const costVal = routedInfo.cost !== undefined ? routedInfo.cost : ((routedInfo.path.length - 1) * this.grid.pitch);
+
+            this.controls.updateLiveDataPanel({
+                frontier: [],
+                visited: visitedNodes,
+                traversal: traversalNodes,
+                path: routedInfo.path,
+                g: costVal,
+                h: 0,
+                f: costVal
+            }, this.grid, this.currentAlgorithm);
+            this.controls.updateInspectStatusBadge(selectedNetId);
+        } else if (searchData) {
+            this.controls.updateLiveDataPanel(searchData, this.grid, this.currentAlgorithm);
+            this.controls.updateInspectStatusBadge(selectedNetId);
+        } else {
+            this.controls.updateLiveDataPanel({
+                frontier: [],
+                visited: [],
+                traversal: [],
+                path: null
+            }, this.grid, this.currentAlgorithm);
+            this.controls.updateInspectStatusBadge(selectedNetId);
+        }
+    }
+
     _processRouterStep(step) {
         if (!step) return;
 
+        const isInspectingActive = !this.controls.dataNetSelect || 
+                                   this.controls.dataNetSelect.value === 'active' || 
+                                   this.controls.dataNetSelect.value === step.net?.id;
+
         if (step.type === 'net_start') {
             this.currentActiveNet = step.net;
+            this.currentTraversal = [step.startNodeId];
             const srcName = this.controls.getFriendlyPinName(step.net.source);
             const tgtName = this.controls.getFriendlyPinName(step.net.target);
 
@@ -483,9 +666,29 @@ class PcbApp {
                 treeEdges: [],
                 explanation: expl
             });
+
+            const startData = {
+                frontier: [step.startNodeId],
+                visited: [],
+                traversal: [...this.currentTraversal],
+                path: null,
+                g: 0,
+                h: 0,
+                f: 0
+            };
+            this.netSearchDataMap.set(step.net.id, startData);
+
+            if (isInspectingActive) {
+                this.controls.updateLiveDataPanel(startData, this.grid, this.currentAlgorithm);
+            }
             this._captureSnapshot(step, expl);
         } else if (step.type === 'search_step' || step.type === 'step') {
             this.currentActiveNet = step.net;
+            if (step.currentNode !== undefined && step.currentNode !== null) {
+                if (this.currentTraversal[this.currentTraversal.length - 1] !== step.currentNode) {
+                    this.currentTraversal.push(step.currentNode);
+                }
+            }
             this.canvas.setSearchState(
                 step.visited,
                 step.frontier,
@@ -524,6 +727,21 @@ class PcbApp {
                 explanation: expl
             });
 
+            const stepData = {
+                frontier: step.frontier,
+                visited: step.visited,
+                traversal: [...this.currentTraversal],
+                path: step.currentPath,
+                g: step.g,
+                h: step.h,
+                f: step.f
+            };
+            this.netSearchDataMap.set(step.net.id, stepData);
+
+            if (isInspectingActive) {
+                this.controls.updateLiveDataPanel(stepData, this.grid, this.currentAlgorithm);
+            }
+
             this._captureSnapshot(step, expl);
         } else if (step.type === 'net_routed') {
             // Net successfully placed
@@ -548,6 +766,23 @@ class PcbApp {
                 f: step.cost,
                 explanation: expl
             });
+
+            const allVisited = step.tree ? this._extractAllNodesFromTree(step.tree) : (step.visited || step.path);
+            const routedData = {
+                frontier: [],
+                visited: allVisited,
+                traversal: [...this.currentTraversal],
+                path: step.path,
+                tree: step.tree,
+                g: step.cost,
+                h: 0,
+                f: step.cost
+            };
+            this.netSearchDataMap.set(step.net.id, routedData);
+
+            if (isInspectingActive) {
+                this.controls.updateLiveDataPanel(routedData, this.grid, this.currentAlgorithm);
+            }
             this._captureSnapshot(step, expl);
         } else if (step.type === 'conflict_detected') {
             const expl = `Conflict detected on ${step.net.name}! Path blocked by existing traces. Initiating Rip-Up...`;
@@ -567,6 +802,7 @@ class PcbApp {
             const ripped = this.nets.find(n => n.id === step.rippedNet.id);
             if (ripped) ripped.path = null;
             this.routedDataMap.delete(step.rippedNet.id);
+            this.netSearchDataMap.delete(step.rippedNet.id);
             this.controls.renderNetlist(this.nets, this.routedDataMap);
             this.canvas.setCircuit(this.components, this.nets);
 
@@ -612,6 +848,7 @@ class PcbApp {
             }
             this.controls.updateMetrics(summary);
             this.controls.renderNetlist(this.nets, this.routedDataMap);
+            this.controls.renderInspectNetDropdown(this.nets, this.routedDataMap, this.controls.dataNetSelect ? this.controls.dataNetSelect.value : 'active');
 
             if (summary.success) {
                 this.controls.setStatus(`Routing Complete! 100% Routed (${summary.netsRouted}/${summary.netsTotal} Nets)`, 'success');
@@ -626,20 +863,30 @@ class PcbApp {
 
     async _logRoutingResult(summary) {
         try {
-            await fetch('api/boards.php?action=log', {
+            const payload = {
+                algorithm: this.currentAlgorithm,
+                nets_total: summary.netsTotal,
+                nets_routed: summary.netsRouted,
+                nodes_explored: summary.totalNodesExplored,
+                conflicts_detected: summary.totalConflicts,
+                ripups_performed: summary.totalRipups,
+                total_wire_length_mm: summary.totalWireLengthMm,
+                execution_time_ms: summary.executionTimeMs
+            };
+
+            let res = await fetch('api/boards?action=log', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    algorithm: this.currentAlgorithm,
-                    nets_total: summary.netsTotal,
-                    nets_routed: summary.netsRouted,
-                    nodes_explored: summary.totalNodesExplored,
-                    conflicts_detected: summary.totalConflicts,
-                    ripups_performed: summary.totalRipups,
-                    total_wire_length_mm: summary.totalWireLengthMm,
-                    execution_time_ms: summary.executionTimeMs
-                })
-            });
+                body: JSON.stringify(payload)
+            }).catch(() => null);
+
+            if (!res || !res.ok) {
+                await fetch('api/boards.php?action=log', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).catch(() => null);
+            }
         } catch (e) {
             console.log('Metrics logging skipped:', e);
         }
@@ -649,51 +896,135 @@ class PcbApp {
         const title = prompt('Enter a title for this board layout:', 'My Custom PCB Layout');
         if (!title) return;
 
+        const boardPayload = {
+            title: title.trim(),
+            components: this.components.map(c => c.toJSON()),
+            netlist: this.nets
+        };
+
+        // Always save to browser localStorage for offline & serverless resilience
         try {
-            const res = await fetch('api/boards.php', {
+            const localList = JSON.parse(localStorage.getItem('pcb_saved_boards') || '[]');
+            const localId = Date.now();
+            const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+            localList.unshift({
+                id: localId,
+                title: title.trim(),
+                created_at: nowStr,
+                updated_at: nowStr,
+                components: boardPayload.components,
+                netlist: boardPayload.netlist
+            });
+            localStorage.setItem('pcb_saved_boards', JSON.stringify(localList.slice(0, 30)));
+        } catch (e) {
+            console.warn('Could not cache board to localStorage:', e);
+        }
+
+        // Also try backend API
+        let apiSaved = false;
+        try {
+            let res = await fetch('api/boards', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title,
-                    components: this.components.map(c => c.toJSON()),
-                    netlist: this.nets
-                })
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert(`Board "${title}" saved successfully to SQLite database!`);
-            } else {
-                alert(`Error saving board: ${data.error}`);
+                body: JSON.stringify(boardPayload)
+            }).catch(() => null);
+
+            if (!res || !res.ok) {
+                res = await fetch('api/boards.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(boardPayload)
+                }).catch(() => null);
+            }
+
+            if (res && res.ok) {
+                const data = await res.json();
+                if (data.success) apiSaved = true;
             }
         } catch (e) {
-            alert('Failed to connect to PHP backend database.');
+            // Handled via local storage
         }
+
+        alert(`Board "${title}" saved successfully!`);
     }
 
     async showLoadBoardDialog() {
+        let boards = [];
+
+        // 1. Try remote API
         try {
-            const res = await fetch('api/boards.php');
-            const json = await res.json();
-            if (json.success && json.data && json.data.length > 0) {
-                const names = json.data.map(b => `#${b.id}: ${b.title} (${b.created_at})`).join('\n');
-                const selectedId = prompt(`Select Board ID to load:\n\n${names}`);
-                if (selectedId) {
-                    const boardRes = await fetch(`api/boards.php?id=${parseInt(selectedId, 10)}`);
-                    const boardJson = await boardRes.json();
-                    if (boardJson.success && boardJson.data) {
-                        this.applyPresetData({
-                            name: boardJson.data.title,
-                            components: boardJson.data.components,
-                            netlist: boardJson.data.netlist
-                        });
-                    }
+            let res = await fetch('api/boards').catch(() => null);
+            if (!res || !res.ok) {
+                res = await fetch('api/boards.php').catch(() => null);
+            }
+            if (res && res.ok) {
+                const json = await res.json();
+                if (json.success && Array.isArray(json.data)) {
+                    boards = json.data;
                 }
-            } else {
-                alert('No saved boards found in database. Save one first!');
             }
         } catch (e) {
-            alert('Failed to retrieve boards from backend.');
+            console.log('Remote boards lookup skipped:', e);
         }
+
+        // 2. Merge with localStorage boards
+        try {
+            const localList = JSON.parse(localStorage.getItem('pcb_saved_boards') || '[]');
+            if (Array.isArray(localList)) {
+                for (const lb of localList) {
+                    if (!boards.find(b => b.id == lb.id)) {
+                        boards.push(lb);
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('LocalStorage lookup skipped:', e);
+        }
+
+        if (boards.length === 0) {
+            alert('No saved boards found. Customize the circuit and click Save first!');
+            return;
+        }
+
+        const names = boards.map(b => `#${b.id}: ${b.title} (${b.created_at || 'Saved'})`).join('\n');
+        const selectedId = prompt(`Select Board ID to load:\n\n${names}`);
+        if (!selectedId) return;
+
+        const targetId = selectedId.trim().replace(/^#/, '');
+
+        // Check in-memory/localStorage list first
+        const localMatch = boards.find(b => String(b.id) === targetId && b.components && b.netlist);
+        if (localMatch) {
+            this.applyPresetData({
+                name: localMatch.title,
+                components: localMatch.components,
+                netlist: localMatch.netlist
+            });
+            return;
+        }
+
+        // Otherwise fetch full details from API
+        try {
+            let boardRes = await fetch(`api/boards?id=${encodeURIComponent(targetId)}`).catch(() => null);
+            if (!boardRes || !boardRes.ok) {
+                boardRes = await fetch(`api/boards.php?id=${encodeURIComponent(targetId)}`).catch(() => null);
+            }
+            if (boardRes && boardRes.ok) {
+                const boardJson = await boardRes.json();
+                if (boardJson.success && boardJson.data) {
+                    this.applyPresetData({
+                        name: boardJson.data.title,
+                        components: boardJson.data.components,
+                        netlist: boardJson.data.netlist
+                    });
+                    return;
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load board by id:', e);
+        }
+
+        alert(`Could not load board #${targetId}.`);
     }
 
     showAddNetDialog() {

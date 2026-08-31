@@ -446,6 +446,10 @@ button {
     gap: var(--spacing-sm);
 }
 
+.export-options-grid button:last-child:nth-child(odd) {
+    grid-column: span 2;
+}
+
 /* ===== Sliders ===== */
 .slider-container {
     display: flex;
@@ -955,6 +959,74 @@ button {
     color: var(--accent-primary);
     font-weight: 600;
     text-align: right;
+}
+
+/* ===== Live Data Display (Matching aisearch-v2) ===== */
+.data-display {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.data-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.data-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.data-value {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    font-size: 0.78rem;
+    background: #f8fafc;
+    padding: 6px 8px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    word-wrap: break-word;
+    max-height: 90px;
+    overflow-y: auto;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+.data-divider {
+    border: none;
+    border-top: 1px dashed var(--border-color);
+    margin: 4px 0 8px 0;
+}
+
+/* Array styling for data display */
+.array-empty {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.75rem;
+}
+
+.array-bracket {
+    color: var(--text-muted);
+    font-weight: bold;
+}
+
+.array-item {
+    color: #2563eb;
+    font-weight: 600;
+    padding: 1px 5px;
+    background: rgba(37, 99, 235, 0.08);
+    border-radius: var(--radius-sm);
+    margin: 0 1px;
+    display: inline-block;
+    font-size: 0.75rem;
+}
+
+.array-comma {
+    color: var(--text-muted);
 }
 
 /* ===== Responsive Breakpoints ===== */
