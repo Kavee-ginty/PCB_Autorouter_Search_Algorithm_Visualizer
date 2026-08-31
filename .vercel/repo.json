@@ -1,0 +1,11 @@
+{
+  "remoteName": "origin",
+  "projects": [
+    {
+      "id": "prj_x7g9H0PYImK59YRGIsLTYaMY899G",
+      "name": "pcb-autorouter-search-algorithm-visualizer",
+      "directory": ".",
+      "orgId": "team_03z3ISaMQWLNx360y32F6jWx"
+    }
+  ]
+}

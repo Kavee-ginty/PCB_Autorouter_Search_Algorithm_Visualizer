@@ -1,0 +1,2515 @@
+[
+  {
+    "algo": "bfs",
+    "name": "Breadth-First Search (BFS)",
+    "options": {},
+    "executionTimeMs": 4.099600000000002,
+    "summary": {
+      "success": false,
+      "netsTotal": 5,
+      "netsRouted": 4,
+      "netsUnrouted": 1,
+      "totalNodesExplored": 570,
+      "totalConflicts": 7,
+      "totalRipups": 6,
+      "totalWireLengthMm": 160,
+      "unroutedNets": [
+        {
+          "id": "net_4",
+          "name": "Net 4 (LED Anode)",
+          "reason": "Non-planar topological crossing or unroutable constraint"
+        }
+      ],
+      "routedNets": [
+        {
+          "id": "net_2",
+          "name": "Net 2 (Sensor Cross)",
+          "pathLength": 6,
+          "cost": 28,
+          "nodesExplored": 18,
+          "wireLengthMm": 25,
+          "pathCoords": "(8,5)->(8,4)->(8,3)->(8,2)->(7,2)->(7,1)"
+        },
+        {
+          "id": "net_3",
+          "name": "Net 3 (Sensor Out)",
+          "pathLength": 16,
+          "cost": 84,
+          "nodesExplored": 52,
+          "wireLengthMm": 75,
+          "pathCoords": "(8,1)->(8,0)->(7,0)->(6,0)->(6,1)->(5,1)->(4,1)->(3,1)->(2,1)->(1,1)->(0,1)->(0,2)->(0,3)->(0,4)->(1,4)->(1,5)"
+        },
+        {
+          "id": "net_1",
+          "name": "Net 1 (VCC Cross)",
+          "pathLength": 10,
+          "cost": 707.25,
+          "nodesExplored": 19,
+          "wireLengthMm": 45,
+          "pathCoords": "(1,2)->(1,3)->(2,3)->(3,3)->(3,4)->(4,4)->(5,4)->(6,4)->(7,4)->(7,5)"
+        },
+        {
+          "id": "net_5",
+          "name": "Net 5 (GND Return)",
+          "pathLength": 4,
+          "cost": 16.5,
+          "nodesExplored": 6,
+          "wireLengthMm": 15,
+          "pathCoords": "(5,3)->(5,2)->(4,2)->(3,2)"
+        }
+      ]
+    },
+    "stepEvents": [
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 51
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 6,
+        "cost": 28
+      },
+      {
+        "type": "net_routed",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "pathLength": 16,
+        "cost": 84
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 1,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 1
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 61.75
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "attempt": 2,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_1",
+        "blockedNetName": "Net 1 (VCC Cross)",
+        "ripUpCount": 2
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 269.75
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 3,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 3
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 177.25
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "attempt": 4,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_1",
+        "blockedNetName": "Net 1 (VCC Cross)",
+        "ripUpCount": 4
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 488.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 5,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 5
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 292.75
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "attempt": 6,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_1",
+        "blockedNetName": "Net 1 (VCC Cross)",
+        "ripUpCount": 6
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 707.25
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 7,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "net_unroutable",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "reason": "Non-planar topological crossing"
+      },
+      {
+        "type": "net_routed",
+        "net": "net_5",
+        "netName": "Net 5 (GND Return)",
+        "pathLength": 4,
+        "cost": 16.5
+      }
+    ]
+  },
+  {
+    "algo": "dfs",
+    "name": "Depth-First Search (DFS)",
+    "options": {},
+    "executionTimeMs": 1.659799999999997,
+    "summary": {
+      "success": false,
+      "netsTotal": 5,
+      "netsRouted": 4,
+      "netsUnrouted": 1,
+      "totalNodesExplored": 463,
+      "totalConflicts": 7,
+      "totalRipups": 6,
+      "totalWireLengthMm": 175,
+      "unroutedNets": [
+        {
+          "id": "net_3",
+          "name": "Net 3 (Sensor Out)",
+          "reason": "Non-planar topological crossing or unroutable constraint"
+        }
+      ],
+      "routedNets": [
+        {
+          "id": "net_1",
+          "name": "Net 1 (VCC Cross)",
+          "pathLength": 22,
+          "cost": 114,
+          "nodesExplored": 22,
+          "wireLengthMm": 105,
+          "pathCoords": "(1,2)->(1,1)->(1,0)->(2,0)->(3,0)->(4,0)->(5,0)->(6,0)->(7,0)->(8,0)->(9,0)->(9,1)->(9,2)->(9,3)->(9,4)->(9,5)->(9,6)->(9,7)->(8,7)->(8,6)->(7,6)->(7,5)"
+        },
+        {
+          "id": "net_2",
+          "name": "Net 2 (Sensor Cross)",
+          "pathLength": 6,
+          "cost": 547.75,
+          "nodesExplored": 6,
+          "wireLengthMm": 25,
+          "pathCoords": "(8,5)->(8,4)->(8,3)->(8,2)->(7,2)->(7,1)"
+        },
+        {
+          "id": "net_4",
+          "name": "Net 4 (LED Anode)",
+          "pathLength": 5,
+          "cost": 194.75,
+          "nodesExplored": 5,
+          "wireLengthMm": 20,
+          "pathCoords": "(2,5)->(2,4)->(2,3)->(3,3)->(4,3)"
+        },
+        {
+          "id": "net_5",
+          "name": "Net 5 (GND Return)",
+          "pathLength": 6,
+          "cost": 29.5,
+          "nodesExplored": 42,
+          "wireLengthMm": 25,
+          "pathCoords": "(5,3)->(5,2)->(5,1)->(4,1)->(4,2)->(3,2)"
+        }
+      ]
+    },
+    "stepEvents": [
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 22,
+        "cost": 114
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 6,
+        "cost": 28
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "attempt": 1,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_2",
+        "rippedNetName": "Net 2 (Sensor Cross)",
+        "blockedNet": "net_3",
+        "blockedNetName": "Net 3 (Sensor Out)",
+        "ripUpCount": 1
+      },
+      {
+        "type": "net_routed",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "pathLength": 34,
+        "cost": 260.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "attempt": 2,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_3",
+        "rippedNetName": "Net 3 (Sensor Out)",
+        "blockedNet": "net_2",
+        "blockedNetName": "Net 2 (Sensor Cross)",
+        "ripUpCount": 2
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 6,
+        "cost": 201.25
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "attempt": 3,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_2",
+        "rippedNetName": "Net 2 (Sensor Cross)",
+        "blockedNet": "net_3",
+        "blockedNetName": "Net 3 (Sensor Out)",
+        "ripUpCount": 3
+      },
+      {
+        "type": "net_routed",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "pathLength": 34,
+        "cost": 997.25
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "attempt": 4,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_3",
+        "rippedNetName": "Net 3 (Sensor Out)",
+        "blockedNet": "net_2",
+        "blockedNetName": "Net 2 (Sensor Cross)",
+        "ripUpCount": 4
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 6,
+        "cost": 374.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "attempt": 5,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_2",
+        "rippedNetName": "Net 2 (Sensor Cross)",
+        "blockedNet": "net_3",
+        "blockedNetName": "Net 3 (Sensor Out)",
+        "ripUpCount": 5
+      },
+      {
+        "type": "net_routed",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "pathLength": 34,
+        "cost": 1734
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "attempt": 6,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_3",
+        "rippedNetName": "Net 3 (Sensor Out)",
+        "blockedNet": "net_2",
+        "blockedNetName": "Net 2 (Sensor Cross)",
+        "ripUpCount": 6
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 6,
+        "cost": 547.75
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "attempt": 7,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "net_unroutable",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "reason": "Non-planar topological crossing"
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 194.75
+      },
+      {
+        "type": "net_routed",
+        "net": "net_5",
+        "netName": "Net 5 (GND Return)",
+        "pathLength": 6,
+        "cost": 29.5
+      }
+    ]
+  },
+  {
+    "algo": "dls",
+    "name": "Depth-Limited Search (DLS, limit=10)",
+    "options": {
+      "depthLimit": 10
+    },
+    "executionTimeMs": 3.7214000000000027,
+    "summary": {
+      "success": false,
+      "netsTotal": 5,
+      "netsRouted": 3,
+      "netsUnrouted": 2,
+      "totalNodesExplored": 1386,
+      "totalConflicts": 8,
+      "totalRipups": 6,
+      "totalWireLengthMm": 125,
+      "unroutedNets": [
+        {
+          "id": "net_3",
+          "name": "Net 3 (Sensor Out)",
+          "reason": "Non-planar topological crossing or unroutable constraint"
+        },
+        {
+          "id": "net_4",
+          "name": "Net 4 (LED Anode)",
+          "reason": "Non-planar topological crossing or unroutable constraint"
+        }
+      ],
+      "routedNets": [
+        {
+          "id": "net_2",
+          "name": "Net 2 (Sensor Cross)",
+          "pathLength": 10,
+          "cost": 229.5,
+          "nodesExplored": 10,
+          "wireLengthMm": 45,
+          "pathCoords": "(8,5)->(8,4)->(8,3)->(8,2)->(9,2)->(9,1)->(9,0)->(8,0)->(7,0)->(7,1)"
+        },
+        {
+          "id": "net_1",
+          "name": "Net 1 (VCC Cross)",
+          "pathLength": 10,
+          "cost": 667,
+          "nodesExplored": 91,
+          "wireLengthMm": 45,
+          "pathCoords": "(1,2)->(1,3)->(2,3)->(3,3)->(3,4)->(4,4)->(5,4)->(6,4)->(7,4)->(7,5)"
+        },
+        {
+          "id": "net_5",
+          "name": "Net 5 (GND Return)",
+          "pathLength": 8,
+          "cost": 39.5,
+          "nodesExplored": 15,
+          "wireLengthMm": 35,
+          "pathCoords": "(5,3)->(5,2)->(5,1)->(5,0)->(4,0)->(4,1)->(4,2)->(3,2)"
+        }
+      ]
+    },
+    "stepEvents": [
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 51
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 10,
+        "cost": 51
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "attempt": 1,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_3",
+        "blockedNetName": "Net 3 (Sensor Out)",
+        "ripUpCount": 1
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "attempt": 2,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_2",
+        "rippedNetName": "Net 2 (Sensor Cross)",
+        "blockedNet": "net_3",
+        "blockedNetName": "Net 3 (Sensor Out)",
+        "ripUpCount": 2
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "attempt": 3,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "net_unroutable",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "reason": "Non-planar topological crossing"
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 10,
+        "cost": 229.5
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 229.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 3,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 3
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 102
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "attempt": 4,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_1",
+        "blockedNetName": "Net 1 (VCC Cross)",
+        "ripUpCount": 4
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 448.25
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 5,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 5
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 217.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "attempt": 6,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_1",
+        "blockedNetName": "Net 1 (VCC Cross)",
+        "ripUpCount": 6
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 667
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 7,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "net_unroutable",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "reason": "Non-planar topological crossing"
+      },
+      {
+        "type": "net_routed",
+        "net": "net_5",
+        "netName": "Net 5 (GND Return)",
+        "pathLength": 8,
+        "cost": 39.5
+      }
+    ]
+  },
+  {
+    "algo": "dls",
+    "name": "Depth-Limited Search (DLS, limit=15)",
+    "options": {
+      "depthLimit": 15
+    },
+    "executionTimeMs": 1.9140000000000015,
+    "summary": {
+      "success": false,
+      "netsTotal": 5,
+      "netsRouted": 4,
+      "netsUnrouted": 1,
+      "totalNodesExplored": 960,
+      "totalConflicts": 7,
+      "totalRipups": 6,
+      "totalWireLengthMm": 175,
+      "unroutedNets": [
+        {
+          "id": "net_3",
+          "name": "Net 3 (Sensor Out)",
+          "reason": "Non-planar topological crossing or unroutable constraint"
+        }
+      ],
+      "routedNets": [
+        {
+          "id": "net_2",
+          "name": "Net 2 (Sensor Cross)",
+          "pathLength": 10,
+          "cost": 49.5,
+          "nodesExplored": 10,
+          "wireLengthMm": 45,
+          "pathCoords": "(8,5)->(9,5)->(9,4)->(9,3)->(9,2)->(9,1)->(9,0)->(8,0)->(7,0)->(7,1)"
+        },
+        {
+          "id": "net_1",
+          "name": "Net 1 (VCC Cross)",
+          "pathLength": 16,
+          "cost": 117.5,
+          "nodesExplored": 87,
+          "wireLengthMm": 75,
+          "pathCoords": "(1,2)->(1,1)->(0,1)->(0,2)->(0,3)->(0,4)->(0,5)->(0,6)->(1,6)->(2,6)->(3,6)->(3,5)->(4,5)->(5,5)->(6,5)->(7,5)"
+        },
+        {
+          "id": "net_4",
+          "name": "Net 4 (LED Anode)",
+          "pathLength": 5,
+          "cost": 224.5,
+          "nodesExplored": 5,
+          "wireLengthMm": 20,
+          "pathCoords": "(2,5)->(2,4)->(2,3)->(3,3)->(4,3)"
+        },
+        {
+          "id": "net_5",
+          "name": "Net 5 (GND Return)",
+          "pathLength": 8,
+          "cost": 79.75,
+          "nodesExplored": 38,
+          "wireLengthMm": 35,
+          "pathCoords": "(5,3)->(5,2)->(5,1)->(5,0)->(4,0)->(4,1)->(4,2)->(3,2)"
+        }
+      ]
+    },
+    "stepEvents": [
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 16,
+        "cost": 84
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 10,
+        "cost": 49.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "attempt": 1,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_3",
+        "blockedNetName": "Net 3 (Sensor Out)",
+        "ripUpCount": 1
+      },
+      {
+        "type": "net_routed",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "pathLength": 16,
+        "cost": 199.5
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 16,
+        "cost": 117.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 2,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_3",
+        "rippedNetName": "Net 3 (Sensor Out)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 2
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 39
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "attempt": 3,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_3",
+        "blockedNetName": "Net 3 (Sensor Out)",
+        "ripUpCount": 3
+      },
+      {
+        "type": "net_routed",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "pathLength": 16,
+        "cost": 511
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 4,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_3",
+        "rippedNetName": "Net 3 (Sensor Out)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 4
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 131.75
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "attempt": 5,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_3",
+        "blockedNetName": "Net 3 (Sensor Out)",
+        "ripUpCount": 5
+      },
+      {
+        "type": "net_routed",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "pathLength": 16,
+        "cost": 822.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 6,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_3",
+        "rippedNetName": "Net 3 (Sensor Out)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 6
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 224.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "attempt": 7,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "net_unroutable",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "reason": "Non-planar topological crossing"
+      },
+      {
+        "type": "net_routed",
+        "net": "net_5",
+        "netName": "Net 5 (GND Return)",
+        "pathLength": 8,
+        "cost": 79.75
+      }
+    ]
+  },
+  {
+    "algo": "dls",
+    "name": "Depth-Limited Search (DLS, limit=20)",
+    "options": {
+      "depthLimit": 20
+    },
+    "executionTimeMs": 0.8461999999999961,
+    "summary": {
+      "success": false,
+      "netsTotal": 5,
+      "netsRouted": 4,
+      "netsUnrouted": 1,
+      "totalNodesExplored": 715,
+      "totalConflicts": 7,
+      "totalRipups": 6,
+      "totalWireLengthMm": 165,
+      "unroutedNets": [
+        {
+          "id": "net_3",
+          "name": "Net 3 (Sensor Out)",
+          "reason": "Non-planar topological crossing or unroutable constraint"
+        }
+      ],
+      "routedNets": [
+        {
+          "id": "net_1",
+          "name": "Net 1 (VCC Cross)",
+          "pathLength": 20,
+          "cost": 101,
+          "nodesExplored": 26,
+          "wireLengthMm": 95,
+          "pathCoords": "(1,2)->(1,1)->(1,0)->(2,0)->(3,0)->(4,0)->(5,0)->(6,0)->(7,0)->(8,0)->(9,0)->(9,1)->(9,2)->(9,3)->(9,4)->(9,5)->(9,6)->(8,6)->(7,6)->(7,5)"
+        },
+        {
+          "id": "net_2",
+          "name": "Net 2 (Sensor Cross)",
+          "pathLength": 6,
+          "cost": 547.75,
+          "nodesExplored": 6,
+          "wireLengthMm": 25,
+          "pathCoords": "(8,5)->(8,4)->(8,3)->(8,2)->(7,2)->(7,1)"
+        },
+        {
+          "id": "net_4",
+          "name": "Net 4 (LED Anode)",
+          "pathLength": 5,
+          "cost": 21.5,
+          "nodesExplored": 5,
+          "wireLengthMm": 20,
+          "pathCoords": "(2,5)->(2,4)->(2,3)->(3,3)->(4,3)"
+        },
+        {
+          "id": "net_5",
+          "name": "Net 5 (GND Return)",
+          "pathLength": 6,
+          "cost": 29.5,
+          "nodesExplored": 121,
+          "wireLengthMm": 25,
+          "pathCoords": "(5,3)->(5,2)->(5,1)->(4,1)->(4,2)->(3,2)"
+        }
+      ]
+    },
+    "stepEvents": [
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 20,
+        "cost": 101
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 6,
+        "cost": 28
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "attempt": 1,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_2",
+        "rippedNetName": "Net 2 (Sensor Cross)",
+        "blockedNet": "net_3",
+        "blockedNetName": "Net 3 (Sensor Out)",
+        "ripUpCount": 1
+      },
+      {
+        "type": "net_routed",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "pathLength": 20,
+        "cost": 177
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "attempt": 2,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_3",
+        "rippedNetName": "Net 3 (Sensor Out)",
+        "blockedNet": "net_2",
+        "blockedNetName": "Net 2 (Sensor Cross)",
+        "ripUpCount": 2
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 6,
+        "cost": 201.25
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "attempt": 3,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_2",
+        "rippedNetName": "Net 2 (Sensor Cross)",
+        "blockedNet": "net_3",
+        "blockedNetName": "Net 3 (Sensor Out)",
+        "ripUpCount": 3
+      },
+      {
+        "type": "net_routed",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "pathLength": 20,
+        "cost": 621.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "attempt": 4,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_3",
+        "rippedNetName": "Net 3 (Sensor Out)",
+        "blockedNet": "net_2",
+        "blockedNetName": "Net 2 (Sensor Cross)",
+        "ripUpCount": 4
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 6,
+        "cost": 374.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "attempt": 5,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_2",
+        "rippedNetName": "Net 2 (Sensor Cross)",
+        "blockedNet": "net_3",
+        "blockedNetName": "Net 3 (Sensor Out)",
+        "ripUpCount": 5
+      },
+      {
+        "type": "net_routed",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "pathLength": 20,
+        "cost": 1066
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "attempt": 6,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_3",
+        "rippedNetName": "Net 3 (Sensor Out)",
+        "blockedNet": "net_2",
+        "blockedNetName": "Net 2 (Sensor Cross)",
+        "ripUpCount": 6
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 6,
+        "cost": 547.75
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "attempt": 7,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "net_unroutable",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "reason": "Non-planar topological crossing"
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 21.5
+      },
+      {
+        "type": "net_routed",
+        "net": "net_5",
+        "netName": "Net 5 (GND Return)",
+        "pathLength": 6,
+        "cost": 29.5
+      }
+    ]
+  },
+  {
+    "algo": "ids",
+    "name": "Iterative Deepening Search (IDS, maxDepth=25)",
+    "options": {
+      "maxDepth": 25
+    },
+    "executionTimeMs": 30.806399999999996,
+    "summary": {
+      "success": false,
+      "netsTotal": 5,
+      "netsRouted": 4,
+      "netsUnrouted": 1,
+      "totalNodesExplored": 12024,
+      "totalConflicts": 7,
+      "totalRipups": 6,
+      "totalWireLengthMm": 160,
+      "unroutedNets": [
+        {
+          "id": "net_4",
+          "name": "Net 4 (LED Anode)",
+          "reason": "Non-planar topological crossing or unroutable constraint"
+        }
+      ],
+      "routedNets": [
+        {
+          "id": "net_2",
+          "name": "Net 2 (Sensor Cross)",
+          "pathLength": 6,
+          "cost": 28,
+          "nodesExplored": 65,
+          "wireLengthMm": 25,
+          "pathCoords": "(8,5)->(8,4)->(8,3)->(8,2)->(7,2)->(7,1)"
+        },
+        {
+          "id": "net_3",
+          "name": "Net 3 (Sensor Out)",
+          "pathLength": 16,
+          "cost": 84,
+          "nodesExplored": 728,
+          "wireLengthMm": 75,
+          "pathCoords": "(8,1)->(8,0)->(7,0)->(6,0)->(6,1)->(5,1)->(4,1)->(3,1)->(2,1)->(1,1)->(0,1)->(0,2)->(0,3)->(0,4)->(1,4)->(1,5)"
+        },
+        {
+          "id": "net_1",
+          "name": "Net 1 (VCC Cross)",
+          "pathLength": 10,
+          "cost": 707.25,
+          "nodesExplored": 94,
+          "wireLengthMm": 45,
+          "pathCoords": "(1,2)->(1,3)->(2,3)->(3,3)->(3,4)->(4,4)->(5,4)->(6,4)->(7,4)->(7,5)"
+        },
+        {
+          "id": "net_5",
+          "name": "Net 5 (GND Return)",
+          "pathLength": 4,
+          "cost": 16.5,
+          "nodesExplored": 14,
+          "wireLengthMm": 15,
+          "pathCoords": "(5,3)->(5,2)->(4,2)->(3,2)"
+        }
+      ]
+    },
+    "stepEvents": [
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 51
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 6,
+        "cost": 28
+      },
+      {
+        "type": "net_routed",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "pathLength": 16,
+        "cost": 84
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 1,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 1
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 61.75
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "attempt": 2,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_1",
+        "blockedNetName": "Net 1 (VCC Cross)",
+        "ripUpCount": 2
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 269.75
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 3,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 3
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 177.25
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "attempt": 4,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_1",
+        "blockedNetName": "Net 1 (VCC Cross)",
+        "ripUpCount": 4
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 488.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 5,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 5
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 292.75
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "attempt": 6,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_1",
+        "blockedNetName": "Net 1 (VCC Cross)",
+        "ripUpCount": 6
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 707.25
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 7,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "net_unroutable",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "reason": "Non-planar topological crossing"
+      },
+      {
+        "type": "net_routed",
+        "net": "net_5",
+        "netName": "Net 5 (GND Return)",
+        "pathLength": 4,
+        "cost": 16.5
+      }
+    ]
+  },
+  {
+    "algo": "ucs",
+    "name": "Uniform Cost Search (UCS)",
+    "options": {},
+    "executionTimeMs": 1.3093000000000075,
+    "summary": {
+      "success": true,
+      "netsTotal": 5,
+      "netsRouted": 5,
+      "netsUnrouted": 0,
+      "totalNodesExplored": 447,
+      "totalConflicts": 1,
+      "totalRipups": 1,
+      "totalWireLengthMm": 190,
+      "unroutedNets": [],
+      "routedNets": [
+        {
+          "id": "net_2",
+          "name": "Net 2 (Sensor Cross)",
+          "pathLength": 6,
+          "cost": 28,
+          "nodesExplored": 27,
+          "wireLengthMm": 25,
+          "pathCoords": "(8,5)->(8,4)->(8,3)->(8,2)->(7,2)->(7,1)"
+        },
+        {
+          "id": "net_3",
+          "name": "Net 3 (Sensor Out)",
+          "pathLength": 16,
+          "cost": 79.5,
+          "nodesExplored": 56,
+          "wireLengthMm": 75,
+          "pathCoords": "(8,1)->(8,0)->(7,0)->(6,0)->(5,0)->(4,0)->(3,0)->(2,0)->(1,0)->(0,0)->(0,1)->(0,2)->(0,3)->(0,4)->(0,5)->(1,5)"
+        },
+        {
+          "id": "net_4",
+          "name": "Net 4 (LED Anode)",
+          "pathLength": 5,
+          "cost": 39,
+          "nodesExplored": 27,
+          "wireLengthMm": 20,
+          "pathCoords": "(2,5)->(2,4)->(2,3)->(3,3)->(4,3)"
+        },
+        {
+          "id": "net_1",
+          "name": "Net 1 (VCC Cross)",
+          "pathLength": 12,
+          "cost": 99.75,
+          "nodesExplored": 38,
+          "wireLengthMm": 55,
+          "pathCoords": "(1,2)->(1,1)->(2,1)->(3,1)->(4,1)->(5,1)->(6,1)->(6,2)->(6,3)->(6,4)->(6,5)->(7,5)"
+        },
+        {
+          "id": "net_5",
+          "name": "Net 5 (GND Return)",
+          "pathLength": 4,
+          "cost": 16.5,
+          "nodesExplored": 4,
+          "wireLengthMm": 15,
+          "pathCoords": "(5,3)->(5,2)->(4,2)->(3,2)"
+        }
+      ]
+    },
+    "stepEvents": [
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 48
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 6,
+        "cost": 28
+      },
+      {
+        "type": "net_routed",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "pathLength": 16,
+        "cost": 79.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 1,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 1
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 39
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 12,
+        "cost": 99.75
+      },
+      {
+        "type": "net_routed",
+        "net": "net_5",
+        "netName": "Net 5 (GND Return)",
+        "pathLength": 4,
+        "cost": 16.5
+      }
+    ]
+  },
+  {
+    "algo": "bidirectional",
+    "name": "Bidirectional Search (BDS)",
+    "options": {},
+    "executionTimeMs": 1.7475999999999914,
+    "summary": {
+      "success": false,
+      "netsTotal": 5,
+      "netsRouted": 4,
+      "netsUnrouted": 1,
+      "totalNodesExplored": 398,
+      "totalConflicts": 7,
+      "totalRipups": 6,
+      "totalWireLengthMm": 160,
+      "unroutedNets": [
+        {
+          "id": "net_4",
+          "name": "Net 4 (LED Anode)",
+          "reason": "Non-planar topological crossing or unroutable constraint"
+        }
+      ],
+      "routedNets": [
+        {
+          "id": "net_2",
+          "name": "Net 2 (Sensor Cross)",
+          "pathLength": 6,
+          "cost": 26.5,
+          "nodesExplored": 10,
+          "wireLengthMm": 25,
+          "pathCoords": "(8,5)->(8,4)->(8,3)->(8,2)->(7,2)->(7,1)"
+        },
+        {
+          "id": "net_3",
+          "name": "Net 3 (Sensor Out)",
+          "pathLength": 16,
+          "cost": 84,
+          "nodesExplored": 47,
+          "wireLengthMm": 75,
+          "pathCoords": "(8,1)->(8,0)->(7,0)->(6,0)->(6,1)->(5,1)->(4,1)->(3,1)->(2,1)->(1,1)->(0,1)->(0,2)->(0,3)->(0,4)->(1,4)->(1,5)"
+        },
+        {
+          "id": "net_1",
+          "name": "Net 1 (VCC Cross)",
+          "pathLength": 10,
+          "cost": 654.75,
+          "nodesExplored": 14,
+          "wireLengthMm": 45,
+          "pathCoords": "(1,2)->(1,3)->(2,3)->(3,3)->(3,4)->(4,4)->(5,4)->(6,4)->(7,4)->(7,5)"
+        },
+        {
+          "id": "net_5",
+          "name": "Net 5 (GND Return)",
+          "pathLength": 4,
+          "cost": 16.5,
+          "nodesExplored": 4,
+          "wireLengthMm": 15,
+          "pathCoords": "(5,3)->(5,2)->(4,2)->(3,2)"
+        }
+      ]
+    },
+    "stepEvents": [
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 51
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 6,
+        "cost": 26.5
+      },
+      {
+        "type": "net_routed",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "pathLength": 16,
+        "cost": 84
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 1,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 1
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 37.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "attempt": 2,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_1",
+        "blockedNetName": "Net 1 (VCC Cross)",
+        "ripUpCount": 2
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 252.25
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 3,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 3
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 125
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "attempt": 4,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_1",
+        "blockedNetName": "Net 1 (VCC Cross)",
+        "ripUpCount": 4
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 453.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 5,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 5
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 212.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "attempt": 6,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_1",
+        "blockedNetName": "Net 1 (VCC Cross)",
+        "ripUpCount": 6
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 654.75
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 7,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "net_unroutable",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "reason": "Non-planar topological crossing"
+      },
+      {
+        "type": "net_routed",
+        "net": "net_5",
+        "netName": "Net 5 (GND Return)",
+        "pathLength": 4,
+        "cost": 16.5
+      }
+    ]
+  },
+  {
+    "algo": "greedy",
+    "name": "Greedy Best-First (Euclidean)",
+    "options": {
+      "heuristicType": "euclidean"
+    },
+    "executionTimeMs": 1.3185000000000002,
+    "summary": {
+      "success": false,
+      "netsTotal": 5,
+      "netsRouted": 4,
+      "netsUnrouted": 1,
+      "totalNodesExplored": 307,
+      "totalConflicts": 7,
+      "totalRipups": 6,
+      "totalWireLengthMm": 160,
+      "unroutedNets": [
+        {
+          "id": "net_4",
+          "name": "Net 4 (LED Anode)",
+          "reason": "Non-planar topological crossing or unroutable constraint"
+        }
+      ],
+      "routedNets": [
+        {
+          "id": "net_2",
+          "name": "Net 2 (Sensor Cross)",
+          "pathLength": 6,
+          "cost": 28,
+          "nodesExplored": 6,
+          "wireLengthMm": 25,
+          "pathCoords": "(8,5)->(8,4)->(8,3)->(8,2)->(7,2)->(7,1)"
+        },
+        {
+          "id": "net_3",
+          "name": "Net 3 (Sensor Out)",
+          "pathLength": 16,
+          "cost": 84,
+          "nodesExplored": 18,
+          "wireLengthMm": 75,
+          "pathCoords": "(8,1)->(8,0)->(7,0)->(6,0)->(6,1)->(5,1)->(4,1)->(3,1)->(2,1)->(1,1)->(0,1)->(0,2)->(0,3)->(0,4)->(1,4)->(1,5)"
+        },
+        {
+          "id": "net_1",
+          "name": "Net 1 (VCC Cross)",
+          "pathLength": 10,
+          "cost": 707.25,
+          "nodesExplored": 10,
+          "wireLengthMm": 45,
+          "pathCoords": "(1,2)->(1,3)->(2,3)->(3,3)->(3,4)->(4,4)->(5,4)->(6,4)->(7,4)->(7,5)"
+        },
+        {
+          "id": "net_5",
+          "name": "Net 5 (GND Return)",
+          "pathLength": 4,
+          "cost": 16.5,
+          "nodesExplored": 4,
+          "wireLengthMm": 15,
+          "pathCoords": "(5,3)->(5,2)->(4,2)->(3,2)"
+        }
+      ]
+    },
+    "stepEvents": [
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 51
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 6,
+        "cost": 28
+      },
+      {
+        "type": "net_routed",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "pathLength": 16,
+        "cost": 84
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 1,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 1
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 70
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "attempt": 2,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_1",
+        "blockedNetName": "Net 1 (VCC Cross)",
+        "ripUpCount": 2
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 269.75
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 3,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 3
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 201.25
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "attempt": 4,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_1",
+        "blockedNetName": "Net 1 (VCC Cross)",
+        "ripUpCount": 4
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 488.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 5,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 5
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 332.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "attempt": 6,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_1",
+        "blockedNetName": "Net 1 (VCC Cross)",
+        "ripUpCount": 6
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 707.25
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 7,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "net_unroutable",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "reason": "Non-planar topological crossing"
+      },
+      {
+        "type": "net_routed",
+        "net": "net_5",
+        "netName": "Net 5 (GND Return)",
+        "pathLength": 4,
+        "cost": 16.5
+      }
+    ]
+  },
+  {
+    "algo": "greedy",
+    "name": "Greedy Best-First (Manhattan)",
+    "options": {
+      "heuristicType": "manhattan"
+    },
+    "executionTimeMs": 0.7225999999999999,
+    "summary": {
+      "success": false,
+      "netsTotal": 5,
+      "netsRouted": 3,
+      "netsUnrouted": 2,
+      "totalNodesExplored": 303,
+      "totalConflicts": 8,
+      "totalRipups": 6,
+      "totalWireLengthMm": 155,
+      "unroutedNets": [
+        {
+          "id": "net_4",
+          "name": "Net 4 (LED Anode)",
+          "reason": "Non-planar topological crossing or unroutable constraint"
+        },
+        {
+          "id": "net_5",
+          "name": "Net 5 (GND Return)",
+          "reason": "Non-planar topological crossing or unroutable constraint"
+        }
+      ],
+      "routedNets": [
+        {
+          "id": "net_2",
+          "name": "Net 2 (Sensor Cross)",
+          "pathLength": 6,
+          "cost": 28,
+          "nodesExplored": 6,
+          "wireLengthMm": 25,
+          "pathCoords": "(8,5)->(8,4)->(8,3)->(8,2)->(7,2)->(7,1)"
+        },
+        {
+          "id": "net_3",
+          "name": "Net 3 (Sensor Out)",
+          "pathLength": 18,
+          "cost": 97,
+          "nodesExplored": 20,
+          "wireLengthMm": 85,
+          "pathCoords": "(8,1)->(8,0)->(7,0)->(6,0)->(6,1)->(6,2)->(5,2)->(4,2)->(4,1)->(3,1)->(2,1)->(1,1)->(0,1)->(0,2)->(0,3)->(0,4)->(1,4)->(1,5)"
+        },
+        {
+          "id": "net_1",
+          "name": "Net 1 (VCC Cross)",
+          "pathLength": 10,
+          "cost": 707.25,
+          "nodesExplored": 10,
+          "wireLengthMm": 45,
+          "pathCoords": "(1,2)->(1,3)->(2,3)->(3,3)->(3,4)->(4,4)->(5,4)->(6,4)->(7,4)->(7,5)"
+        }
+      ]
+    },
+    "stepEvents": [
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 51
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 6,
+        "cost": 28
+      },
+      {
+        "type": "net_routed",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "pathLength": 18,
+        "cost": 97
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 1,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 1
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 61.75
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "attempt": 2,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_1",
+        "blockedNetName": "Net 1 (VCC Cross)",
+        "ripUpCount": 2
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 269.75
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 3,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 3
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 177.25
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "attempt": 4,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_1",
+        "blockedNetName": "Net 1 (VCC Cross)",
+        "ripUpCount": 4
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 488.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 5,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 5
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 292.75
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "attempt": 6,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_4",
+        "rippedNetName": "Net 4 (LED Anode)",
+        "blockedNet": "net_1",
+        "blockedNetName": "Net 1 (VCC Cross)",
+        "ripUpCount": 6
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 707.25
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 7,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "net_unroutable",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "reason": "Non-planar topological crossing"
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_5",
+        "netName": "Net 5 (GND Return)",
+        "attempt": 7,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "net_unroutable",
+        "net": "net_5",
+        "netName": "Net 5 (GND Return)",
+        "reason": "Non-planar topological crossing"
+      }
+    ]
+  },
+  {
+    "algo": "astar",
+    "name": "A* Search (Euclidean)",
+    "options": {
+      "heuristicType": "euclidean"
+    },
+    "executionTimeMs": 0.8886000000000109,
+    "summary": {
+      "success": true,
+      "netsTotal": 5,
+      "netsRouted": 5,
+      "netsUnrouted": 0,
+      "totalNodesExplored": 279,
+      "totalConflicts": 1,
+      "totalRipups": 1,
+      "totalWireLengthMm": 190,
+      "unroutedNets": [],
+      "routedNets": [
+        {
+          "id": "net_2",
+          "name": "Net 2 (Sensor Cross)",
+          "pathLength": 6,
+          "cost": 28,
+          "nodesExplored": 8,
+          "wireLengthMm": 25,
+          "pathCoords": "(8,5)->(8,4)->(8,3)->(8,2)->(7,2)->(7,1)"
+        },
+        {
+          "id": "net_3",
+          "name": "Net 3 (Sensor Out)",
+          "pathLength": 16,
+          "cost": 79.5,
+          "nodesExplored": 48,
+          "wireLengthMm": 75,
+          "pathCoords": "(8,1)->(9,1)->(9,2)->(9,3)->(9,4)->(9,5)->(9,6)->(8,6)->(7,6)->(6,6)->(5,6)->(4,6)->(3,6)->(2,6)->(1,6)->(1,5)"
+        },
+        {
+          "id": "net_4",
+          "name": "Net 4 (LED Anode)",
+          "pathLength": 5,
+          "cost": 39,
+          "nodesExplored": 9,
+          "wireLengthMm": 20,
+          "pathCoords": "(2,5)->(2,4)->(2,3)->(3,3)->(4,3)"
+        },
+        {
+          "id": "net_1",
+          "name": "Net 1 (VCC Cross)",
+          "pathLength": 12,
+          "cost": 99.75,
+          "nodesExplored": 46,
+          "wireLengthMm": 55,
+          "pathCoords": "(1,2)->(1,1)->(2,1)->(3,1)->(4,1)->(5,1)->(6,1)->(6,2)->(6,3)->(6,4)->(6,5)->(7,5)"
+        },
+        {
+          "id": "net_5",
+          "name": "Net 5 (GND Return)",
+          "pathLength": 4,
+          "cost": 16.5,
+          "nodesExplored": 4,
+          "wireLengthMm": 15,
+          "pathCoords": "(5,3)->(5,2)->(4,2)->(3,2)"
+        }
+      ]
+    },
+    "stepEvents": [
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 48
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 6,
+        "cost": 28
+      },
+      {
+        "type": "net_routed",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "pathLength": 16,
+        "cost": 79.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 1,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 1
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 39
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 12,
+        "cost": 99.75
+      },
+      {
+        "type": "net_routed",
+        "net": "net_5",
+        "netName": "Net 5 (GND Return)",
+        "pathLength": 4,
+        "cost": 16.5
+      }
+    ]
+  },
+  {
+    "algo": "astar",
+    "name": "A* Search (Manhattan)",
+    "options": {
+      "heuristicType": "manhattan"
+    },
+    "executionTimeMs": 0.33790000000000475,
+    "summary": {
+      "success": true,
+      "netsTotal": 5,
+      "netsRouted": 5,
+      "netsUnrouted": 0,
+      "totalNodesExplored": 241,
+      "totalConflicts": 1,
+      "totalRipups": 1,
+      "totalWireLengthMm": 190,
+      "unroutedNets": [],
+      "routedNets": [
+        {
+          "id": "net_2",
+          "name": "Net 2 (Sensor Cross)",
+          "pathLength": 6,
+          "cost": 28,
+          "nodesExplored": 7,
+          "wireLengthMm": 25,
+          "pathCoords": "(8,5)->(8,4)->(8,3)->(8,2)->(7,2)->(7,1)"
+        },
+        {
+          "id": "net_3",
+          "name": "Net 3 (Sensor Out)",
+          "pathLength": 16,
+          "cost": 79.5,
+          "nodesExplored": 42,
+          "wireLengthMm": 75,
+          "pathCoords": "(8,1)->(8,0)->(7,0)->(6,0)->(5,0)->(4,0)->(3,0)->(2,0)->(1,0)->(0,0)->(0,1)->(0,2)->(0,3)->(0,4)->(0,5)->(1,5)"
+        },
+        {
+          "id": "net_4",
+          "name": "Net 4 (LED Anode)",
+          "pathLength": 5,
+          "cost": 39,
+          "nodesExplored": 11,
+          "wireLengthMm": 20,
+          "pathCoords": "(2,5)->(2,4)->(2,3)->(3,3)->(4,3)"
+        },
+        {
+          "id": "net_1",
+          "name": "Net 1 (VCC Cross)",
+          "pathLength": 12,
+          "cost": 99.75,
+          "nodesExplored": 26,
+          "wireLengthMm": 55,
+          "pathCoords": "(1,2)->(1,1)->(2,1)->(3,1)->(4,1)->(5,1)->(6,1)->(6,2)->(6,3)->(6,4)->(6,5)->(7,5)"
+        },
+        {
+          "id": "net_5",
+          "name": "Net 5 (GND Return)",
+          "pathLength": 4,
+          "cost": 16.5,
+          "nodesExplored": 4,
+          "wireLengthMm": 15,
+          "pathCoords": "(5,3)->(5,2)->(4,2)->(3,2)"
+        }
+      ]
+    },
+    "stepEvents": [
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 10,
+        "cost": 48
+      },
+      {
+        "type": "net_routed",
+        "net": "net_2",
+        "netName": "Net 2 (Sensor Cross)",
+        "pathLength": 6,
+        "cost": 28
+      },
+      {
+        "type": "net_routed",
+        "net": "net_3",
+        "netName": "Net 3 (Sensor Out)",
+        "pathLength": 16,
+        "cost": 79.5
+      },
+      {
+        "type": "conflict_detected",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "attempt": 1,
+        "reason": "Path obstructed by existing traces or boundaries"
+      },
+      {
+        "type": "ripup_performed",
+        "rippedNet": "net_1",
+        "rippedNetName": "Net 1 (VCC Cross)",
+        "blockedNet": "net_4",
+        "blockedNetName": "Net 4 (LED Anode)",
+        "ripUpCount": 1
+      },
+      {
+        "type": "net_routed",
+        "net": "net_4",
+        "netName": "Net 4 (LED Anode)",
+        "pathLength": 5,
+        "cost": 39
+      },
+      {
+        "type": "net_routed",
+        "net": "net_1",
+        "netName": "Net 1 (VCC Cross)",
+        "pathLength": 12,
+        "cost": 99.75
+      },
+      {
+        "type": "net_routed",
+        "net": "net_5",
+        "netName": "Net 5 (GND Return)",
+        "pathLength": 4,
+        "cost": 16.5
+      }
+    ]
+  }
+]
