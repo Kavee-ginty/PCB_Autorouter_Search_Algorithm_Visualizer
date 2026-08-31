@@ -32,9 +32,11 @@ class PcbApp {
         this.activeRouterGenerator = null;
         this.timerId = null;
         this.routedDataMap = new Map(); // netId -> routed summary
+        this.netSearchDataMap = new Map(); // netId -> search data snapshot (visited, traversal, path, cost)
         this.stepHistory = [];
         this.historyIndex = -1;
         this.currentActiveNet = null;
+        this.currentTraversal = [];
 
         this.canvasElement = document.getElementById('pcb-canvas');
         this.canvas = new PcbCanvas(this.canvasElement, this.grid, {
@@ -270,6 +272,7 @@ class PcbApp {
         this.resetRouting();
         const info = ALGORITHMS[algo]?.name || algo;
         this.controls.setStatus(`Selected Algorithm: ${info}`, 'ready');
+        this.controls.resetLiveDataPanel();
     }
 
     setStepDelay(ms) {
@@ -399,6 +402,16 @@ class PcbApp {
             routedDataMap: new Map(this.routedDataMap),
             rippedPaths: [...this.canvas.rippedPaths],
             activeNet: step.net || this.currentActiveNet || null,
+            traversal: [...this.currentTraversal],
+            liveData: {
+                frontier: step.frontier ? [...step.frontier] : [],
+                visited: step.visited ? [...step.visited] : [],
+                traversal: [...this.currentTraversal],
+                path: step.path ? [...step.path] : (step.currentPath ? [...step.currentPath] : null),
+                g: step.g !== undefined ? step.g : (step.cost !== undefined ? step.cost : 0),
+                h: step.h !== undefined ? step.h : 0,
+                f: step.f !== undefined ? step.f : 0
+            },
             searchState: {
                 visited: step.visited ? [...step.visited] : [],
                 frontier: step.frontier ? [...step.frontier] : [],
@@ -484,10 +497,24 @@ class PcbApp {
         );
         this.canvas.setCircuit(this.components, this.nets);
 
-        // Restore controls & HUD
+        // Restore controls & HUD & Live Data
+        this.currentTraversal = snapshot.traversal ? [...snapshot.traversal] : [];
         this.controls.renderNetlist(this.nets, this.routedDataMap);
         this.controls.updateMetrics(snapshot.metrics);
         this.controls.updateSearchHud(snapshot.hudInfo);
+        this.controls.updateLiveDataPanel(
+            snapshot.liveData || {
+                frontier: snapshot.searchState.frontier,
+                visited: snapshot.searchState.visited,
+                traversal: this.currentTraversal,
+                path: snapshot.searchState.currentPath,
+                g: snapshot.hudInfo.g,
+                h: snapshot.hudInfo.h,
+                f: snapshot.hudInfo.f
+            },
+            this.grid,
+            this.currentAlgorithm
+        );
         this.controls.setStatus(snapshot.status.text, snapshot.status.type);
     }
 
@@ -507,9 +534,11 @@ class PcbApp {
         this.stepHistory = [];
         this.historyIndex = -1;
         this.currentActiveNet = null;
+        this.currentTraversal = [];
         this.grid.clearTraces();
         this.grid.resetPenalties();
         this.routedDataMap.clear();
+        this.netSearchDataMap.clear();
 
         for (const n of this.nets) {
             n.path = null;
@@ -531,6 +560,10 @@ class PcbApp {
             action: 'Ready',
             explanation: 'Ready to route. Click "Auto Route All" or "Step Next" to begin.'
         });
+        this.controls.resetLiveDataPanel();
+        if (this.controls.dataNetSelect) {
+            this.controls.renderInspectNetDropdown(this.nets, this.routedDataMap, 'active');
+        }
 
         const btn = document.getElementById('btn-route');
         if (btn) {
@@ -540,11 +573,83 @@ class PcbApp {
         this.controls.setStatus('Ready to Route', 'ready');
     }
 
+    _extractAllNodesFromTree(rootTree) {
+        if (!rootTree) return [];
+        const nodes = [];
+        const visitedIds = new Set();
+        const queue = [rootTree];
+        while (queue.length > 0) {
+            const curr = queue.shift();
+            if (curr.nodeId !== undefined && !visitedIds.has(curr.nodeId)) {
+                visitedIds.add(curr.nodeId);
+                nodes.push(curr.nodeId);
+            }
+            if (curr.children) {
+                for (const ch of curr.children) {
+                    queue.push(ch);
+                }
+            }
+        }
+        return nodes;
+    }
+
+    onInspectNetChanged(selectedNetId) {
+        if (!selectedNetId || selectedNetId === 'active') {
+            const latestSnapshot = (this.historyIndex >= 0 && this.stepHistory[this.historyIndex]) || 
+                                   this.stepHistory[this.stepHistory.length - 1];
+            if (latestSnapshot && latestSnapshot.liveData) {
+                this.controls.updateLiveDataPanel(latestSnapshot.liveData, this.grid, this.currentAlgorithm);
+            } else {
+                this.controls.resetLiveDataPanel();
+            }
+            this.controls.updateInspectStatusBadge('active');
+            return;
+        }
+
+        const net = this.nets.find(n => n.id === selectedNetId);
+        const routedInfo = this.routedDataMap.get(selectedNetId);
+        const searchData = this.netSearchDataMap.get(selectedNetId);
+
+        if (routedInfo && routedInfo.path) {
+            const visitedNodes = searchData?.visited?.length ? searchData.visited : 
+                                (routedInfo.tree ? this._extractAllNodesFromTree(routedInfo.tree) : routedInfo.path);
+            const traversalNodes = searchData?.traversal?.length ? searchData.traversal : visitedNodes;
+            const costVal = routedInfo.cost !== undefined ? routedInfo.cost : ((routedInfo.path.length - 1) * this.grid.pitch);
+
+            this.controls.updateLiveDataPanel({
+                frontier: [],
+                visited: visitedNodes,
+                traversal: traversalNodes,
+                path: routedInfo.path,
+                g: costVal,
+                h: 0,
+                f: costVal
+            }, this.grid, this.currentAlgorithm);
+            this.controls.updateInspectStatusBadge(selectedNetId);
+        } else if (searchData) {
+            this.controls.updateLiveDataPanel(searchData, this.grid, this.currentAlgorithm);
+            this.controls.updateInspectStatusBadge(selectedNetId);
+        } else {
+            this.controls.updateLiveDataPanel({
+                frontier: [],
+                visited: [],
+                traversal: [],
+                path: null
+            }, this.grid, this.currentAlgorithm);
+            this.controls.updateInspectStatusBadge(selectedNetId);
+        }
+    }
+
     _processRouterStep(step) {
         if (!step) return;
 
+        const isInspectingActive = !this.controls.dataNetSelect || 
+                                   this.controls.dataNetSelect.value === 'active' || 
+                                   this.controls.dataNetSelect.value === step.net?.id;
+
         if (step.type === 'net_start') {
             this.currentActiveNet = step.net;
+            this.currentTraversal = [step.startNodeId];
             const srcName = this.controls.getFriendlyPinName(step.net.source);
             const tgtName = this.controls.getFriendlyPinName(step.net.target);
 
@@ -561,9 +666,29 @@ class PcbApp {
                 treeEdges: [],
                 explanation: expl
             });
+
+            const startData = {
+                frontier: [step.startNodeId],
+                visited: [],
+                traversal: [...this.currentTraversal],
+                path: null,
+                g: 0,
+                h: 0,
+                f: 0
+            };
+            this.netSearchDataMap.set(step.net.id, startData);
+
+            if (isInspectingActive) {
+                this.controls.updateLiveDataPanel(startData, this.grid, this.currentAlgorithm);
+            }
             this._captureSnapshot(step, expl);
         } else if (step.type === 'search_step' || step.type === 'step') {
             this.currentActiveNet = step.net;
+            if (step.currentNode !== undefined && step.currentNode !== null) {
+                if (this.currentTraversal[this.currentTraversal.length - 1] !== step.currentNode) {
+                    this.currentTraversal.push(step.currentNode);
+                }
+            }
             this.canvas.setSearchState(
                 step.visited,
                 step.frontier,
@@ -602,6 +727,21 @@ class PcbApp {
                 explanation: expl
             });
 
+            const stepData = {
+                frontier: step.frontier,
+                visited: step.visited,
+                traversal: [...this.currentTraversal],
+                path: step.currentPath,
+                g: step.g,
+                h: step.h,
+                f: step.f
+            };
+            this.netSearchDataMap.set(step.net.id, stepData);
+
+            if (isInspectingActive) {
+                this.controls.updateLiveDataPanel(stepData, this.grid, this.currentAlgorithm);
+            }
+
             this._captureSnapshot(step, expl);
         } else if (step.type === 'net_routed') {
             // Net successfully placed
@@ -626,6 +766,23 @@ class PcbApp {
                 f: step.cost,
                 explanation: expl
             });
+
+            const allVisited = step.tree ? this._extractAllNodesFromTree(step.tree) : (step.visited || step.path);
+            const routedData = {
+                frontier: [],
+                visited: allVisited,
+                traversal: [...this.currentTraversal],
+                path: step.path,
+                tree: step.tree,
+                g: step.cost,
+                h: 0,
+                f: step.cost
+            };
+            this.netSearchDataMap.set(step.net.id, routedData);
+
+            if (isInspectingActive) {
+                this.controls.updateLiveDataPanel(routedData, this.grid, this.currentAlgorithm);
+            }
             this._captureSnapshot(step, expl);
         } else if (step.type === 'conflict_detected') {
             const expl = `Conflict detected on ${step.net.name}! Path blocked by existing traces. Initiating Rip-Up...`;
@@ -645,6 +802,7 @@ class PcbApp {
             const ripped = this.nets.find(n => n.id === step.rippedNet.id);
             if (ripped) ripped.path = null;
             this.routedDataMap.delete(step.rippedNet.id);
+            this.netSearchDataMap.delete(step.rippedNet.id);
             this.controls.renderNetlist(this.nets, this.routedDataMap);
             this.canvas.setCircuit(this.components, this.nets);
 
@@ -690,6 +848,7 @@ class PcbApp {
             }
             this.controls.updateMetrics(summary);
             this.controls.renderNetlist(this.nets, this.routedDataMap);
+            this.controls.renderInspectNetDropdown(this.nets, this.routedDataMap, this.controls.dataNetSelect ? this.controls.dataNetSelect.value : 'active');
 
             if (summary.success) {
                 this.controls.setStatus(`Routing Complete! 100% Routed (${summary.netsRouted}/${summary.netsTotal} Nets)`, 'success');

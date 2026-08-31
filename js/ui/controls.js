@@ -118,15 +118,29 @@ export class PcbControls {
 
         // Export buttons
         this.btnExportPng = document.getElementById('btn-export-png');
+        this.btnExportMetricsPng = document.getElementById('btn-export-metrics-png');
+        this.btnExportMetricsCard = document.getElementById('btn-export-metrics-card');
         this.btnExportSvg = document.getElementById('btn-export-svg');
         this.btnExportJson = document.getElementById('btn-export-json');
         this.btnExportCsv = document.getElementById('btn-export-csv');
+
+        // Live Data Panel elements (matching aisearch-v2)
+        this.fringeList = document.getElementById('fringe-list');
+        this.visitedList = document.getElementById('visited-list');
+        this.traversalList = document.getElementById('traversal-list');
+        this.pathList = document.getElementById('path-list');
+        this.informedSearchInfo = document.getElementById('informed-search-info');
+        this.fScore = document.getElementById('f-score');
+        this.pathCostCurrent = document.getElementById('path-cost-current');
+        this.dataNetSelect = document.getElementById('data-net-select');
+        this.dataNetStatus = document.getElementById('data-net-status');
 
         // Canvas View Controls
         this.btnCanvasResetView = document.getElementById('btn-canvas-reset-view');
 
         this._attachEventListeners();
         this.updateAlgorithmInfo(this.app?.currentAlgorithm || 'astar');
+        this.resetLiveDataPanel();
     }
 
     updateAlgorithmInfo(algoKey) {
@@ -230,6 +244,12 @@ export class PcbControls {
         if (this.btnExportPng) {
             this.btnExportPng.addEventListener('click', () => this.exportPng());
         }
+        if (this.btnExportMetricsPng) {
+            this.btnExportMetricsPng.addEventListener('click', () => this.exportMetricsAndLiveDataPng());
+        }
+        if (this.btnExportMetricsCard) {
+            this.btnExportMetricsCard.addEventListener('click', () => this.exportMetricsAndLiveDataPng());
+        }
         if (this.btnExportSvg) {
             this.btnExportSvg.addEventListener('click', () => this.exportSvg());
         }
@@ -245,6 +265,17 @@ export class PcbControls {
             this.btnCanvasResetView.addEventListener('click', () => {
                 this.app.canvas.resetView();
                 this.setStatus('PCB Centered & View Reset', 'ready');
+            });
+        }
+
+        // Live Data Net selector
+        if (this.dataNetSelect) {
+            this.dataNetSelect.addEventListener('change', () => {
+                const val = this.dataNetSelect.value;
+                this.updateInspectStatusBadge(val);
+                if (this.app?.onInspectNetChanged) {
+                    this.app.onInspectNetChanged(val);
+                }
             });
         }
     }
@@ -311,6 +342,372 @@ export class PcbControls {
         });
 
         this.setStatus(`Exported ${filesToExport.length} PNGs (PCB + Search Trees)`, 'ready');
+    }
+
+    async exportMetricsAndLiveDataPng() {
+        this.setStatus('Generating Performance & Live Data PNG snapshot...', 'conflict');
+
+        const dpr = 2; // High-DPI crisp Retina export
+        const sidebarEl = document.querySelector('.sidebar-panel');
+        // Exact displayed width of the panel in the UI
+        const width = sidebarEl ? Math.max(320, Math.round(sidebarEl.getBoundingClientRect().width)) : 340;
+        const padX = 8;
+        const cardW = width - (padX * 2);
+        const cardInnerW = cardW - 20; // 10px internal card padding
+
+        // 1. Gather live DOM data
+        const metrics = [
+            { label: 'NETS ROUTED', val: this.metricNets?.textContent || '0/0' },
+            { label: 'NODES EXPLORED', val: this.metricExplored?.textContent || '0' },
+            { label: 'WIRE LENGTH', val: this.metricLength?.textContent || '0.0 mm' },
+            { label: 'RIP-UP RETRIES', val: this.metricRipups?.textContent || '0' },
+            { label: 'EXECUTION TIME', val: this.metricTime?.textContent || '0.0 ms', color: '#0284c7' }
+        ];
+
+        const netInspectText = this.dataNetSelect?.options[this.dataNetSelect.selectedIndex]?.text || '⚡ Active / Live Step';
+        const inspectStatus = this.dataNetStatus?.textContent || 'Live';
+
+        const extractChips = (elementId) => {
+            const el = document.getElementById(elementId);
+            if (!el) return [];
+            const items = el.querySelectorAll('.array-item');
+            if (items && items.length > 0) {
+                return Array.from(items).map(span => span.textContent.trim());
+            }
+            const text = el.textContent.trim();
+            if (text === 'Empty' || text === 'No path found yet') return [];
+            return text ? [text] : [];
+        };
+
+        const fringeChips = extractChips('fringe-list');
+        const visitedChips = extractChips('visited-list');
+        const traversalChips = extractChips('traversal-list');
+        const pathChips = extractChips('path-list');
+
+        const isInformed = (this.app.currentAlgorithm === 'astar' || this.app.currentAlgorithm === 'greedy' || this.app.currentAlgorithm === 'ucs');
+        const fScoreText = this.fScore?.textContent || 'g(0) + h(0) = 0';
+        const pathCostText = this.pathCostCurrent?.textContent || '0.0 mm';
+
+        // Helper to measure dynamic box height inside exact value box width
+        const innerBoxW = cardInnerW - 20; // 10px padding on .data-display
+        const measureBoxHeight = (items) => {
+            if (!items || items.length === 0) return 26;
+            let curX = 14;
+            let lines = 1;
+            const itemH = 18;
+            const lineGap = 4;
+            for (let i = 0; i < items.length; i++) {
+                const text = items[i];
+                const chipW = (text.length * 6.4) + 12;
+                if (curX + chipW > innerBoxW - 10) {
+                    curX = 14;
+                    lines++;
+                }
+                curX += chipW + 4;
+            }
+            return Math.max(26, lines * (itemH + lineGap) + 6);
+        };
+
+        const fringeH = measureBoxHeight(fringeChips);
+        const visitedH = measureBoxHeight(visitedChips);
+        const traversalH = measureBoxHeight(traversalChips);
+        const pathH = measureBoxHeight(pathChips);
+
+        // Height calculations
+        const card1H = 204;
+        const dataDisplayH = 16 + fringeH + visitedH + traversalH + pathH + (4 * 19) + (isInformed ? 58 : 0);
+        const card2H = 10 + 20 + 8 + 48 + dataDisplayH + 10;
+        const totalHeight = 8 + card1H + 10 + card2H + 8;
+
+        // Create High-DPI canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = width * dpr;
+        canvas.height = totalHeight * dpr;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+
+        // Background: exact --bg-secondary (#f9fafb)
+        ctx.fillStyle = '#f9fafb';
+        ctx.fillRect(0, 0, width, totalHeight);
+
+        // ==========================================
+        // CARD 1: Performance Metrics (Exact UI Style)
+        // ==========================================
+        const card1Y = 8;
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(padX, card1Y, cardW, card1H, 8);
+        else ctx.rect(padX, card1Y, cardW, card1H);
+        ctx.fill();
+        ctx.stroke();
+
+        // Section Header: Icon + "Performance Metrics"
+        let curY = card1Y + 10;
+        
+        // Lucide Bar Chart Icon (Blue)
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(padX + 13, curY + 13); ctx.lineTo(padX + 13, curY + 6);
+        ctx.moveTo(padX + 17, curY + 13); ctx.lineTo(padX + 17, curY + 2);
+        ctx.moveTo(padX + 21, curY + 13); ctx.lineTo(padX + 21, curY + 9);
+        ctx.stroke();
+
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 12.5px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillText('Performance Metrics', padX + 28, curY + 11);
+
+        // Metrics Grid (2 columns)
+        const gridX = padX + 10;
+        const gridY = curY + 20;
+        const colW = (cardInnerW - 6) / 2;
+        const miniCardH = 48;
+
+        const drawMetricMiniCard = (label, val, x, y, w, h, valColor = '#0f172a') => {
+            ctx.fillStyle = '#f8fafc';
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(x, y, w, h, 6);
+            else ctx.rect(x, y, w, h);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#64748b';
+            ctx.font = 'bold 8.5px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            ctx.fillText(label, x + 8, y + 15);
+
+            ctx.fillStyle = valColor;
+            ctx.font = 'bold 14px "JetBrains Mono", "Fira Code", monospace';
+            ctx.fillText(val, x + 8, y + 36);
+        };
+
+        // Row 1: Nets Routed & Nodes Explored
+        drawMetricMiniCard(metrics[0].label, metrics[0].val, gridX, gridY, colW, miniCardH);
+        drawMetricMiniCard(metrics[1].label, metrics[1].val, gridX + colW + 6, gridY, colW, miniCardH);
+
+        // Row 2: Wire Length & Rip-Up Retries
+        drawMetricMiniCard(metrics[2].label, metrics[2].val, gridX, gridY + miniCardH + 6, colW, miniCardH);
+        drawMetricMiniCard(metrics[3].label, metrics[3].val, gridX + colW + 6, gridY + miniCardH + 6, colW, miniCardH);
+
+        // Row 3: Execution Time (full width)
+        drawMetricMiniCard(metrics[4].label, metrics[4].val, gridX, gridY + (miniCardH + 6) * 2, cardInnerW, 40, '#0284c7');
+
+        // ==========================================
+        // CARD 2: Live Data Panel (Exact UI Style)
+        // ==========================================
+        const card2Y = card1Y + card1H + 10;
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(padX, card2Y, cardW, card2H, 8);
+        else ctx.rect(padX, card2Y, cardW, card2H);
+        ctx.fill();
+        ctx.stroke();
+
+        let curY2 = card2Y + 10;
+
+        // Activity Icon (Blue)
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(padX + 11, curY2 + 8);
+        ctx.lineTo(padX + 14, curY2 + 8);
+        ctx.lineTo(padX + 17, curY2 + 3);
+        ctx.lineTo(padX + 20, curY2 + 13);
+        ctx.lineTo(padX + 23, curY2 + 8);
+        ctx.lineTo(padX + 26, curY2 + 8);
+        ctx.stroke();
+
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 12.5px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillText('Live Data Panel', padX + 31, curY2 + 11);
+
+        // Status Badge (Right aligned in header)
+        const badgeText = inspectStatus;
+        ctx.font = 'bold 9px -apple-system, BlinkMacSystemFont, sans-serif';
+        const badgeW = ctx.measureText(badgeText).width + 12;
+        const badgeX = padX + cardW - 10 - badgeW;
+        ctx.fillStyle = inspectStatus === 'Routed' ? 'rgba(16,185,129,0.12)' : (inspectStatus === 'Pending' ? 'rgba(245,158,11,0.12)' : 'rgba(37,99,235,0.08)');
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(badgeX, curY2 - 1, badgeW, 17, 9);
+        else ctx.rect(badgeX, curY2 - 1, badgeW, 17);
+        ctx.fill();
+        ctx.fillStyle = inspectStatus === 'Routed' ? '#059669' : (inspectStatus === 'Pending' ? '#d97706' : '#2563eb');
+        ctx.fillText(badgeText, badgeX + 6, curY2 + 11);
+
+        // Dropdown Select Box Simulation
+        let formY = curY2 + 20;
+        ctx.fillStyle = '#475569';
+        ctx.font = '500 9.5px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.fillText('Inspect Trace / Net:', padX + 10, formY + 8);
+
+        formY += 13;
+        ctx.fillStyle = '#f8fafc';
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(padX + 10, formY, cardInnerW, 25, 4);
+        else ctx.rect(padX + 10, formY, cardInnerW, 25);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '10.5px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.fillText(netInspectText, padX + 18, formY + 16);
+
+        // Dropdown arrow
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        ctx.moveTo(padX + 10 + cardInnerW - 14, formY + 10);
+        ctx.lineTo(padX + 10 + cardInnerW - 10, formY + 14);
+        ctx.lineTo(padX + 10 + cardInnerW - 6, formY + 10);
+        ctx.stroke();
+
+        // Data Display Outer Box (.data-display)
+        let dispY = formY + 31;
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(padX + 10, dispY, cardInnerW, dataDisplayH, 6);
+        else ctx.rect(padX + 10, dispY, cardInnerW, dataDisplayH);
+        ctx.fill();
+        ctx.stroke();
+
+        let rowY = dispY + 8;
+        const valBoxX = padX + 18;
+        const valBoxW = cardInnerW - 16;
+
+        const drawDataRow = (label, items, boxH, emptyMsg = 'Empty') => {
+            ctx.fillStyle = '#475569';
+            ctx.font = '600 8.5px -apple-system, BlinkMacSystemFont, sans-serif';
+            ctx.fillText(label, valBoxX, rowY + 7);
+            rowY += 11;
+
+            // Value Box
+            ctx.fillStyle = '#f8fafc';
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(valBoxX, rowY, valBoxW, boxH, 4);
+            else ctx.rect(valBoxX, rowY, valBoxW, boxH);
+            ctx.fill();
+            ctx.stroke();
+
+            if (!items || items.length === 0) {
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = 'italic 9.5px -apple-system, BlinkMacSystemFont, sans-serif';
+                ctx.fillText(emptyMsg, valBoxX + 6, rowY + boxH / 2 + 3);
+            } else {
+                let curX = valBoxX + 6;
+                let lineY = rowY + 3;
+                const itemH = 17;
+
+                ctx.font = 'bold 9.5px "JetBrains Mono", monospace';
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillText('[', curX, lineY + 12);
+                curX += 7;
+
+                for (let i = 0; i < items.length; i++) {
+                    const text = items[i];
+                    const tw = ctx.measureText(text).width;
+                    const cw = tw + 6;
+
+                    if (curX + cw + 10 > valBoxX + valBoxW - 4) {
+                        curX = valBoxX + 13;
+                        lineY += itemH + 3;
+                    }
+
+                    // Chip background & text
+                    ctx.fillStyle = 'rgba(37, 99, 235, 0.08)';
+                    ctx.beginPath();
+                    if (ctx.roundRect) ctx.roundRect(curX, lineY, cw, itemH, 3);
+                    else ctx.rect(curX, lineY, cw, itemH);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#2563eb';
+                    ctx.fillText(text, curX + 3, lineY + 12);
+
+                    curX += cw;
+
+                    if (i < items.length - 1) {
+                        ctx.fillStyle = '#94a3b8';
+                        ctx.fillText(',', curX, lineY + 12);
+                        curX += 6;
+                    }
+                }
+
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillText(']', curX + 1, lineY + 12);
+            }
+
+            rowY += boxH + 8;
+        };
+
+        drawDataRow('OPEN LIST (FRONTIER):', fringeChips, fringeH, 'Empty');
+        drawDataRow('CLOSE LIST (EXPLORED):', visitedChips, visitedH, 'Empty');
+        drawDataRow('TRAVERSAL ORDER:', traversalChips, traversalH, 'Empty');
+        drawDataRow('PATH FOUND:', pathChips, pathH, 'No path found yet');
+
+        // Informed Search Info Row
+        if (isInformed) {
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(valBoxX, rowY - 2);
+            ctx.lineTo(valBoxX + valBoxW, rowY - 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            rowY += 4;
+
+            ctx.fillStyle = '#475569';
+            ctx.font = '600 8.5px -apple-system, BlinkMacSystemFont, sans-serif';
+            ctx.fillText('CURRENT NODE f(n):', valBoxX, rowY + 7);
+            rowY += 11;
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(valBoxX, rowY, valBoxW, 22, 4);
+            else ctx.rect(valBoxX, rowY, valBoxW, 22);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 9.5px "JetBrains Mono", monospace';
+            ctx.fillText(fScoreText, valBoxX + 6, rowY + 15);
+
+            rowY += 28;
+
+            ctx.fillStyle = '#475569';
+            ctx.font = '600 8.5px -apple-system, BlinkMacSystemFont, sans-serif';
+            ctx.fillText('PATH COST SO FAR:', valBoxX, rowY + 7);
+            rowY += 11;
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(valBoxX, rowY, valBoxW, 22, 4);
+            else ctx.rect(valBoxX, rowY, valBoxW, 22);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 9.5px "JetBrains Mono", monospace';
+            ctx.fillText(pathCostText, valBoxX + 6, rowY + 15);
+        }
+
+        // Trigger instant download
+        const dataUrl = canvas.toDataURL('image/png');
+        this._downloadFile(dataUrl, `pcb-performance-and-live-data-${new Date().getTime()}.png`);
+        this.setStatus('Exported Performance & Live Data Snapshot as PNG', 'ready');
     }
 
     generateTreeSvg(rootNode) {
@@ -657,6 +1054,78 @@ export class PcbControls {
         if (this.metricTime) this.metricTime.textContent = `${(data.executionTimeMs || 0).toFixed(1)} ms`;
     }
 
+    updateLiveDataPanel(data = {}, grid = null, algoKey = 'astar') {
+        const g = grid || this.app?.grid;
+        if (!g) return;
+
+        const formatCoordinateList = (element, idList, emptyText = 'Empty') => {
+            if (!element) return;
+            if (!idList || idList.length === 0) {
+                element.innerHTML = `<span class="array-empty">${emptyText}</span>`;
+                return;
+            }
+
+            const formattedItems = idList.map(item => {
+                let text = '';
+                if (typeof item === 'number') {
+                    const c = g.toCoord(item);
+                    text = c ? `(${c.x},${c.y})` : `${item}`;
+                } else if (item && typeof item === 'object' && item.x !== undefined && item.y !== undefined) {
+                    text = `(${item.x},${item.y})`;
+                } else {
+                    text = String(item);
+                }
+                return `<span class="array-item">${text}</span>`;
+            });
+
+            element.innerHTML = `<span class="array-bracket">[</span> ` +
+                formattedItems.join('<span class="array-comma">, </span>') +
+                ` <span class="array-bracket">]</span>`;
+        };
+
+        formatCoordinateList(this.fringeList, data.frontier, 'Empty');
+        formatCoordinateList(this.visitedList, data.visited, 'Empty');
+        formatCoordinateList(this.traversalList, data.traversal, 'Empty');
+        formatCoordinateList(this.pathList, data.path, 'No path found yet');
+
+        // Informed Search Info
+        if (this.informedSearchInfo) {
+            const isHeuristic = (algoKey === 'astar' || algoKey === 'greedy' || algoKey === 'ucs');
+            if (isHeuristic) {
+                this.informedSearchInfo.style.display = 'block';
+
+                const gVal = data.g !== undefined ? data.g : (data.cost !== undefined ? data.cost : 0);
+                const hVal = data.h !== undefined ? data.h : 0;
+                const fVal = data.f !== undefined ? data.f : (gVal + hVal);
+
+                if (this.fScore) {
+                    if (algoKey === 'greedy') {
+                        this.fScore.textContent = `h(${hVal.toFixed(1)}) = ${hVal.toFixed(1)} mm`;
+                    } else if (algoKey === 'astar') {
+                        this.fScore.textContent = `g(${gVal.toFixed(1)}) + h(${hVal.toFixed(1)}) = ${fVal.toFixed(1)} mm`;
+                    } else {
+                        this.fScore.textContent = `g(${gVal.toFixed(1)}) = ${gVal.toFixed(1)} mm`;
+                    }
+                }
+
+                if (this.pathCostCurrent) {
+                    this.pathCostCurrent.textContent = `${gVal.toFixed(1)} mm`;
+                }
+            } else {
+                this.informedSearchInfo.style.display = 'none';
+            }
+        }
+    }
+
+    resetLiveDataPanel() {
+        if (this.fringeList) this.fringeList.innerHTML = '<span class="array-empty">Empty</span>';
+        if (this.visitedList) this.visitedList.innerHTML = '<span class="array-empty">Empty</span>';
+        if (this.traversalList) this.traversalList.innerHTML = '<span class="array-empty">Empty</span>';
+        if (this.pathList) this.pathList.innerHTML = '<span class="array-empty">No path found yet</span>';
+        if (this.fScore) this.fScore.textContent = 'g(0) + h(0) = 0';
+        if (this.pathCostCurrent) this.pathCostCurrent.textContent = '0.0 mm';
+    }
+
     setStatus(text, type = 'idle') {
         if (this.statusBadge) {
             this.statusBadge.textContent = text;
@@ -696,7 +1165,62 @@ export class PcbControls {
         return pinId;
     }
 
+    renderInspectNetDropdown(nets, routedMap = new Map(), currentSelectedId = null) {
+        if (!this.dataNetSelect) return;
+        const selectedVal = currentSelectedId !== null ? currentSelectedId : this.dataNetSelect.value || 'active';
+        this.dataNetSelect.innerHTML = '';
+
+        const optActive = document.createElement('option');
+        optActive.value = 'active';
+        optActive.textContent = '⚡ Active / Live Step';
+        this.dataNetSelect.appendChild(optActive);
+
+        nets.forEach(net => {
+            const opt = document.createElement('option');
+            opt.value = net.id;
+            const isRouted = routedMap.has(net.id);
+            const rInfo = routedMap.get(net.id);
+            const len = (isRouted && rInfo?.path) ? `${((rInfo.path.length - 1) * 5).toFixed(0)}mm` : 'Pending';
+            opt.textContent = `${isRouted ? '✅' : '⏳'} ${net.name} [${len}]`;
+            this.dataNetSelect.appendChild(opt);
+        });
+
+        // Retain or select previous choice if exists
+        const optionExists = Array.from(this.dataNetSelect.options).some(o => o.value === selectedVal);
+        if (optionExists) {
+            this.dataNetSelect.value = selectedVal;
+        } else {
+            this.dataNetSelect.value = 'active';
+        }
+
+        this.updateInspectStatusBadge(this.dataNetSelect.value);
+    }
+
+    updateInspectStatusBadge(selectedVal) {
+        if (!this.dataNetStatus) return;
+        if (selectedVal === 'active') {
+            this.dataNetStatus.textContent = 'Live';
+            this.dataNetStatus.style.color = '#2563eb';
+            this.dataNetStatus.style.background = 'rgba(37,99,235,0.08)';
+        } else {
+            const isRouted = this.app?.routedDataMap?.has(selectedVal);
+            if (isRouted) {
+                this.dataNetStatus.textContent = 'Routed';
+                this.dataNetStatus.style.color = '#059669';
+                this.dataNetStatus.style.background = 'rgba(16,185,129,0.12)';
+            } else {
+                this.dataNetStatus.textContent = 'Pending';
+                this.dataNetStatus.style.color = '#d97706';
+                this.dataNetStatus.style.background = 'rgba(245,158,11,0.12)';
+            }
+        }
+    }
+
     renderNetlist(nets, routedMap = new Map()) {
+        if (this.dataNetSelect) {
+            this.renderInspectNetDropdown(nets, routedMap);
+        }
+
         if (!this.netlistContainer) return;
         this.netlistContainer.innerHTML = '';
 
@@ -724,8 +1248,15 @@ export class PcbControls {
                 </div>
             `;
 
-            // Click net to view route tree or highlight
+            // Click net to inspect in Live Data Panel & view tree
             item.addEventListener('click', () => {
+                if (this.dataNetSelect) {
+                    this.dataNetSelect.value = net.id;
+                    this.updateInspectStatusBadge(net.id);
+                }
+                if (this.app?.onInspectNetChanged) {
+                    this.app.onInspectNetChanged(net.id);
+                }
                 if (routedInfo && routedInfo.tree) {
                     this.app.treeModal.show({ label: sourceName, id: net.source }, net, routedInfo.tree, this.app.currentAlgorithm);
                 }
