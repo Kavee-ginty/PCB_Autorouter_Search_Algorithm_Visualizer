@@ -10,8 +10,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PCB AutoRouting Visualizer</title>
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/tree.css">
+    <link rel="stylesheet" href="css/style.css?v=9">
+    <link rel="stylesheet" href="css/tree.css?v=9">
     <script src="js/vendor/lucide.min.js"></script>
     <script src="js/vendor/jszip.min.js"></script>
 </head>
@@ -307,39 +307,90 @@
 
     </main>
 
-    <!-- State-Space Tree Exploration Modal -->
+    <!-- State-Space Tree & Grid Search Graph Exploration Modal -->
     <div id="tree-modal" class="tree-modal-backdrop hidden">
         <div class="tree-modal-container">
             <div class="tree-modal-header">
                 <div class="tree-header-info">
                     <h2 id="tree-modal-title" class="tree-modal-title">
-                        <i data-lucide="git-commit"></i> State-Space Exploration Tree
+                        <i data-lucide="git-commit"></i> State-Space Tree & Search Graph Visualizer
                     </h2>
                     <div id="tree-modal-stats" class="tree-modal-stats">
-                        Loading tree structure...
+                        Loading search exploration structure...
                     </div>
                 </div>
                 <div class="tree-header-controls">
+                    <div class="tree-view-switcher">
+                        <button id="view-mode-split" class="tree-view-btn active" title="Split View (Tree & Graph)">
+                            <i data-lucide="columns-2"></i> Split View
+                        </button>
+                        <button id="view-mode-tree" class="tree-view-btn" title="Tree View Only">
+                            <i data-lucide="git-fork"></i> Tree Only
+                        </button>
+                        <button id="view-mode-graph" class="tree-view-btn" title="Grid Graph View Only">
+                            <i data-lucide="grid"></i> Graph Only
+                        </button>
+                    </div>
+                    <button id="tree-export-png-btn" class="tree-btn-export" title="Export PCB, Search Tree, and Graph in a Single Combined PNG">
+                        <i data-lucide="image-down"></i> Export Triple PNG
+                    </button>
                     <button id="tree-modal-close" class="tree-btn-icon" title="Close">
                         <i data-lucide="x"></i>
                     </button>
                 </div>
             </div>
             
-            <div class="tree-modal-body">
-                <div id="tree-svg-container"></div>
+            <div class="tree-modal-body mode-split" id="tree-modal-body">
+                <!-- Left Pane: State-Space Search Tree -->
+                <div class="tree-pane tree-pane-left" id="tree-pane-left">
+                    <div class="tree-pane-header">
+                        <div class="tree-pane-title">
+                            <i data-lucide="git-fork"></i>
+                            <span>State-Space Search Tree</span>
+                            <span class="tree-pane-badge" id="tree-nodes-badge">0 Nodes</span>
+                        </div>
+                        <div class="tree-pane-actions">
+                            <button id="tree-fit-btn" class="tree-pane-btn" title="Auto-Fit Tree">
+                                <i data-lucide="maximize-2"></i> Fit Tree
+                            </button>
+                        </div>
+                    </div>
+                    <div class="tree-pane-content" id="tree-svg-container"></div>
+                </div>
+
+                <!-- Divider -->
+                <div class="tree-pane-divider" id="tree-pane-divider"></div>
+
+                <!-- Right Pane: Grid Search Graph -->
+                <div class="tree-pane tree-pane-right" id="tree-pane-right">
+                    <div class="tree-pane-header">
+                        <div class="tree-pane-title">
+                            <i data-lucide="grid"></i>
+                            <span>PCB Grid Search Graph</span>
+                            <span class="tree-pane-badge badge-graph" id="graph-visited-badge">0 Explored Cells</span>
+                        </div>
+                        <div class="tree-pane-actions">
+                            <button id="graph-fit-btn" class="tree-pane-btn" title="Auto-Fit Graph">
+                                <i data-lucide="maximize-2"></i> Fit Graph
+                            </button>
+                        </div>
+                    </div>
+                    <div class="tree-pane-content" id="graph-svg-container"></div>
+                </div>
 
                 <div class="tree-legend-bar">
-                    <div class="tree-legend-pill"><span class="pill-dot dot-solution"></span> Solution Path</div>
-                    <div class="tree-legend-pill"><span class="pill-dot dot-visited"></span> Visited</div>
-                    <div class="tree-legend-pill"><span class="pill-dot dot-frontier"></span> Unexplored</div>
-                    <div class="tree-legend-pill"><span class="pill-dot dot-pruned"></span> Start Node</div>
+                    <div class="tree-legend-pill"><span class="pill-dot dot-solution"></span> Solution Path / Trace</div>
+                    <div class="tree-legend-pill"><span class="pill-dot dot-visited"></span> Visited / Explored</div>
+                    <div class="tree-legend-pill"><span class="pill-dot dot-frontier"></span> Frontier Node</div>
+                    <div class="tree-legend-pill"><span class="pill-dot dot-pruned"></span> Start Pin</div>
+                    <div class="tree-legend-pill"><span class="pill-dot dot-goal"></span> Goal Pin</div>
+                    <div class="tree-legend-pill"><span class="pill-dot dot-obstacle"></span> Obstacle / Keep-Out</div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Application Script Module -->
-    <script type="module" src="js/app.js"></script>
+    <script type="module" src="js/app.js?v=9"></script>
 </body>
 </html>
