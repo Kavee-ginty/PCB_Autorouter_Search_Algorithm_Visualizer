@@ -1,6 +1,6 @@
 /* 
- * tree.css - State-Space Tree Exploration Modal Styles
- * Styled to match the design system of aisearch-v2/styles.css
+ * tree.css - Dual-Pane State-Space Tree & Grid Search Graph Visualizer Styles
+ * Styled to match the design system of PCB Autorouter & Search Algorithm Visualizer
  */
 
 .tree-modal-backdrop {
@@ -9,8 +9,8 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(6px);
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(8px);
     z-index: 10000;
     display: flex;
     align-items: center;
@@ -31,14 +31,14 @@
 }
 
 .tree-modal-container {
-    width: 92vw;
-    height: 88vh;
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
+    width: 95vw;
+    height: 90vh;
+    background: var(--bg-primary, #ffffff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: var(--radius-lg, 12px);
     display: flex;
     flex-direction: column;
-    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 25px 40px rgba(0, 0, 0, 0.65);
     overflow: hidden;
     animation: modalSlideUp 0.3s ease-out;
 }
@@ -55,48 +55,136 @@
 }
 
 .tree-modal-header {
-    padding: 14px 20px;
-    background: var(--card-bg);
-    border-bottom: 1px solid var(--border-color);
+    padding: 12px 20px;
+    background: var(--card-bg, #ffffff);
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
 }
 
 .tree-header-info {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
+    min-width: 0;
 }
 
 .tree-modal-title {
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--text-primary, #0f172a);
     display: flex;
     align-items: center;
     gap: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .tree-modal-title [data-lucide] {
-    color: var(--accent-primary);
+    color: var(--accent-primary, #2563eb);
     width: 20px;
     height: 20px;
+    flex-shrink: 0;
 }
 
 .tree-modal-stats {
     font-size: 0.8rem;
-    color: var(--text-secondary);
+    color: var(--text-secondary, #64748b);
 }
 
 .tree-modal-stats strong {
-    color: var(--accent-primary);
+    color: var(--accent-primary, #2563eb);
 }
 
 .tree-header-controls {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+/* View Mode Segmented Control */
+.tree-view-switcher {
+    display: inline-flex;
+    align-items: center;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-md, 8px);
+    padding: 3px;
+    gap: 2px;
+}
+
+.tree-view-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all var(--transition-fast, 0.15s ease);
+}
+
+.tree-view-btn svg,
+.tree-view-btn [data-lucide] {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+}
+
+.tree-view-btn:hover {
+    color: #0f172a;
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.tree-view-btn.active {
+    color: #2563eb;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tree-btn-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 13px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: #2563eb;
+    border: 1px solid #1d4ed8;
+    border-radius: var(--radius-md, 8px);
+    cursor: pointer;
+    transition: all var(--transition-fast, 0.15s ease);
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+    white-space: nowrap;
+}
+
+.tree-btn-export:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(37, 99, 235, 0.35);
+}
+
+.tree-btn-export:active {
+    transform: translateY(0);
+}
+
+.tree-btn-export svg,
+.tree-btn-export [data-lucide] {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    stroke-width: 2.2;
 }
 
 .tree-btn-icon {
@@ -106,20 +194,20 @@
     flex-shrink: 0;
     background: #ffffff;
     border: 1px solid #cbd5e1;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-md, 8px);
     color: #334155;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: all var(--transition-fast, 0.15s ease);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .tree-btn-icon:hover {
     background: #f1f5f9;
     border-color: #94a3b8;
-    color: var(--accent-primary);
+    color: #ef4444;
     transform: translateY(-1px);
 }
 
@@ -138,66 +226,225 @@
     pointer-events: none;
 }
 
-.tree-btn-icon:hover svg,
-.tree-btn-icon:hover i,
-.tree-btn-icon:hover [data-lucide] {
-    stroke: var(--accent-primary);
-}
-
+/* Modal Body & Split Panes */
 .tree-modal-body {
     flex: 1;
     position: relative;
     overflow: hidden;
     background-color: #f8fafc;
-    background-image: 
-        linear-gradient(rgba(226, 232, 240, 0.8) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(226, 232, 240, 0.8) 1px, transparent 1px);
-    background-size: 28px 28px;
-    cursor: grab;
-}
-
-.tree-modal-body:active {
-    cursor: grabbing;
-}
-
-#tree-svg-container {
+    display: flex;
+    flex-direction: row;
     width: 100%;
     height: 100%;
 }
 
-.tree-legend-bar {
-    position: absolute;
-    bottom: 16px;
-    left: 20px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid #cbd5e1;
-    border-radius: var(--radius-full);
-    padding: 8px 18px;
+.tree-pane {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: 0;
+    overflow: hidden;
+    background-color: #f8fafc;
+    background-image: 
+        linear-gradient(rgba(226, 232, 240, 0.85) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(226, 232, 240, 0.85) 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+.tree-pane-left,
+.tree-pane-right {
+    flex: 1 1 50%;
+}
+
+.tree-pane-divider {
+    width: 3px;
+    background: #cbd5e1;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 5;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.08);
+}
+
+/* View Mode classes */
+.tree-modal-body.mode-split .tree-pane-left {
+    display: flex;
+    flex: 1 1 50%;
+}
+.tree-modal-body.mode-split .tree-pane-divider {
+    display: block;
+}
+.tree-modal-body.mode-split .tree-pane-right {
+    display: flex;
+    flex: 1 1 50%;
+}
+
+.tree-modal-body.mode-tree .tree-pane-left {
+    display: flex;
+    flex: 1 1 100%;
+}
+.tree-modal-body.mode-tree .tree-pane-divider {
+    display: none;
+}
+.tree-modal-body.mode-tree .tree-pane-right {
+    display: none;
+}
+
+.tree-modal-body.mode-graph .tree-pane-left {
+    display: none;
+}
+.tree-modal-body.mode-graph .tree-pane-divider {
+    display: none;
+}
+.tree-modal-body.mode-graph .tree-pane-right {
+    display: flex;
+    flex: 1 1 100%;
+}
+
+/* Individual Pane Header */
+.tree-pane-header {
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.92);
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+    backdrop-filter: blur(6px);
+    flex-shrink: 0;
+}
+
+.tree-pane-title {
     display: flex;
     align-items: center;
-    gap: 16px;
-    font-size: 0.78rem;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.tree-pane-title svg,
+.tree-pane-title [data-lucide] {
+    width: 16px;
+    height: 16px;
+    color: #2563eb;
+}
+
+.tree-pane-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.tree-pane-badge.badge-graph {
+    background: #f0fdf4;
+    color: #16a34a;
+    border-color: #bbf7d0;
+}
+
+.tree-pane-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tree-pane-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #475569;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.tree-pane-btn:hover {
+    background: #f1f5f9;
+    color: #2563eb;
+    border-color: #94a3b8;
+}
+
+.tree-pane-btn svg,
+.tree-pane-btn [data-lucide] {
+    width: 13px;
+    height: 13px;
+}
+
+/* Pane Content Container */
+.tree-pane-content {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    cursor: grab;
+}
+
+.tree-pane-content:active {
+    cursor: grabbing;
+}
+
+#tree-svg-container,
+#graph-svg-container {
+    width: 100%;
+    height: 100%;
+}
+
+/* Legend Bar */
+.tree-legend-bar {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-full, 9999px);
+    padding: 6px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 0.74rem;
     backdrop-filter: blur(8px);
     pointer-events: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    z-index: 20;
+    max-width: 90%;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .tree-legend-pill {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     color: #334155;
     font-weight: 500;
+    white-space: nowrap;
 }
 
 .pill-dot {
-    width: 12px;
-    height: 12px;
+    width: 11px;
+    height: 11px;
     border-radius: 50%;
+    flex-shrink: 0;
 }
 
 .dot-solution { background: #10b981; border: 1.5px solid #059669; }
 .dot-visited { background: #ffffff; border: 1.5px solid #1e293b; }
 .dot-frontier { background: #8b5cf6; border: 1.5px solid #6d28d9; }
 .dot-pruned { background: #ef4444; border: 1.5px solid #b91c1c; }
+.dot-goal { background: #10b981; border: 1.5px solid #047857; }
+.dot-obstacle { background: #cbd5e1; border: 1.5px solid #64748b; }
 

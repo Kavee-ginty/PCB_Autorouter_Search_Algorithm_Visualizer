@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PCB AutoRouting Visualizer</title>
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/tree.css">
+    <link rel="stylesheet" href="css/style.css?v=9">
+    <link rel="stylesheet" href="css/tree.css?v=9">
     <script src="js/vendor/lucide.min.js"></script>
     <script src="js/vendor/jszip.min.js"></script>
 </head>
@@ -138,14 +138,17 @@
                 </div>
             </div>
 
-            <!-- Export Options Panel -->
+            <!-- Export Options Panel (Matching aisearch-v2) -->
             <div class="panel-section">
                 <div class="section-header">
                     <i data-lucide="download"></i> Export Options
                 </div>
                 <div class="export-options-grid">
-                    <button id="btn-export-png" class="btn btn-secondary btn-small" title="Export as PNG Image">
-                        <i data-lucide="camera"></i> PNG
+                    <button id="btn-export-png" class="btn btn-secondary btn-small" title="Export PCB & Search Trees as PNG">
+                        <i data-lucide="camera"></i> PCB PNG
+                    </button>
+                    <button id="btn-export-metrics-png" class="btn btn-secondary btn-small" title="Export Performance Metrics & Live Data Snapshot as PNG">
+                        <i data-lucide="file-image"></i> Data PNG
                     </button>
                     <button id="btn-export-svg" class="btn btn-secondary btn-small" title="Export as SVG Vector">
                         <i data-lucide="image"></i> SVG
@@ -182,10 +185,15 @@
             
             <!-- Real-Time Metrics -->
             <div class="panel-section">
-                <div class="section-header">
-                    <i data-lucide="bar-chart-2"></i> Performance Metrics
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="section-header" style="margin-bottom: 0;">
+                        <i data-lucide="bar-chart-2"></i> Performance Metrics
+                    </div>
+                    <button id="btn-export-metrics-card" class="btn btn-secondary" style="padding: 3px 8px; font-size: 0.72rem; display: flex; align-items: center; gap: 4px;" title="Take Screenshot PNG of Performance Metrics & Live Data">
+                        <i data-lucide="camera" style="width: 12px; height: 12px;"></i> Snapshot PNG
+                    </button>
                 </div>
-                <div class="metrics-grid">
+                <div class="metrics-grid" style="margin-top: 8px;">
                     <div class="metric-card">
                         <span class="metric-label">Nets Routed</span>
                         <span id="metric-nets" class="metric-value">0/5</span>
@@ -209,6 +217,53 @@
                 </div>
             </div>
 
+            <!-- Live Data Panel (Matching aisearch-v2) -->
+            <div class="panel-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <div class="section-header" style="margin-bottom: 0;">
+                        <i data-lucide="activity"></i> Live Data Panel
+                    </div>
+                    <span id="data-net-status" style="font-size: 0.7rem; font-weight: 700; color: var(--accent-primary); background: rgba(37,99,235,0.08); padding: 2px 7px; border-radius: var(--radius-full);">Live</span>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="form-label" for="data-net-select" style="font-size: 0.72rem;">Inspect Trace / Net:</label>
+                    <select id="data-net-select" class="select-input select-small" style="padding: 5px 8px; font-size: 0.78rem;">
+                        <option value="active" selected>⚡ Active / Live Step</option>
+                    </select>
+                </div>
+
+                <div class="data-display">
+                    <div class="data-row">
+                        <span class="data-label">OPEN LIST (Frontier):</span>
+                        <div id="fringe-list" class="data-value"><span class="array-empty">Empty</span></div>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">CLOSE LIST (Explored):</span>
+                        <div id="visited-list" class="data-value"><span class="array-empty">Empty</span></div>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Traversal Order:</span>
+                        <div id="traversal-list" class="data-value"><span class="array-empty">Empty</span></div>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Path Found:</span>
+                        <div id="path-list" class="data-value"><span class="array-empty">No path found yet</span></div>
+                    </div>
+                    <div id="informed-search-info" style="display: none;">
+                        <hr class="data-divider">
+                        <div class="data-row">
+                            <span class="data-label">Current Node f(n):</span>
+                            <div id="f-score" class="data-value">g(0) + h(0) = 0</div>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Path Cost So Far:</span>
+                            <div id="path-cost-current" class="data-value">0.0 mm</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Netlist / Connections Manager -->
             <div class="panel-section">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -225,7 +280,7 @@
                 </div>
             </div>
 
-            <!-- Algorithm Info Panel -->
+            <!-- Algorithm Info Panel (Matching aisearch-v2) -->
             <div class="panel-section">
                 <div class="section-header">
                     <i data-lucide="info"></i> Algorithm Info
@@ -244,39 +299,90 @@
 
     </main>
 
-    <!-- State-Space Tree Exploration Modal -->
+    <!-- State-Space Tree & Grid Search Graph Exploration Modal -->
     <div id="tree-modal" class="tree-modal-backdrop hidden">
         <div class="tree-modal-container">
             <div class="tree-modal-header">
                 <div class="tree-header-info">
                     <h2 id="tree-modal-title" class="tree-modal-title">
-                        <i data-lucide="git-commit"></i> State-Space Exploration Tree
+                        <i data-lucide="git-commit"></i> State-Space Tree & Search Graph Visualizer
                     </h2>
                     <div id="tree-modal-stats" class="tree-modal-stats">
-                        Loading tree structure...
+                        Loading search exploration structure...
                     </div>
                 </div>
                 <div class="tree-header-controls">
+                    <div class="tree-view-switcher">
+                        <button id="view-mode-split" class="tree-view-btn active" title="Split View (Tree & Graph)">
+                            <i data-lucide="columns-2"></i> Split View
+                        </button>
+                        <button id="view-mode-tree" class="tree-view-btn" title="Tree View Only">
+                            <i data-lucide="git-fork"></i> Tree Only
+                        </button>
+                        <button id="view-mode-graph" class="tree-view-btn" title="Grid Graph View Only">
+                            <i data-lucide="grid"></i> Graph Only
+                        </button>
+                    </div>
+                    <button id="tree-export-png-btn" class="tree-btn-export" title="Export PCB, Search Tree, and Graph in a Single Combined PNG">
+                        <i data-lucide="image-down"></i> Export Triple PNG
+                    </button>
                     <button id="tree-modal-close" class="tree-btn-icon" title="Close">
                         <i data-lucide="x"></i>
                     </button>
                 </div>
             </div>
             
-            <div class="tree-modal-body">
-                <div id="tree-svg-container"></div>
+            <div class="tree-modal-body mode-split" id="tree-modal-body">
+                <!-- Left Pane: State-Space Search Tree -->
+                <div class="tree-pane tree-pane-left" id="tree-pane-left">
+                    <div class="tree-pane-header">
+                        <div class="tree-pane-title">
+                            <i data-lucide="git-fork"></i>
+                            <span>State-Space Search Tree</span>
+                            <span class="tree-pane-badge" id="tree-nodes-badge">0 Nodes</span>
+                        </div>
+                        <div class="tree-pane-actions">
+                            <button id="tree-fit-btn" class="tree-pane-btn" title="Auto-Fit Tree">
+                                <i data-lucide="maximize-2"></i> Fit Tree
+                            </button>
+                        </div>
+                    </div>
+                    <div class="tree-pane-content" id="tree-svg-container"></div>
+                </div>
+
+                <!-- Divider -->
+                <div class="tree-pane-divider" id="tree-pane-divider"></div>
+
+                <!-- Right Pane: Grid Search Graph -->
+                <div class="tree-pane tree-pane-right" id="tree-pane-right">
+                    <div class="tree-pane-header">
+                        <div class="tree-pane-title">
+                            <i data-lucide="grid"></i>
+                            <span>PCB Grid Search Graph</span>
+                            <span class="tree-pane-badge badge-graph" id="graph-visited-badge">0 Explored Cells</span>
+                        </div>
+                        <div class="tree-pane-actions">
+                            <button id="graph-fit-btn" class="tree-pane-btn" title="Auto-Fit Graph">
+                                <i data-lucide="maximize-2"></i> Fit Graph
+                            </button>
+                        </div>
+                    </div>
+                    <div class="tree-pane-content" id="graph-svg-container"></div>
+                </div>
 
                 <div class="tree-legend-bar">
-                    <div class="tree-legend-pill"><span class="pill-dot dot-solution"></span> Solution Path</div>
-                    <div class="tree-legend-pill"><span class="pill-dot dot-visited"></span> Visited</div>
-                    <div class="tree-legend-pill"><span class="pill-dot dot-frontier"></span> Unexplored</div>
-                    <div class="tree-legend-pill"><span class="pill-dot dot-pruned"></span> Start Node</div>
+                    <div class="tree-legend-pill"><span class="pill-dot dot-solution"></span> Solution Path / Trace</div>
+                    <div class="tree-legend-pill"><span class="pill-dot dot-visited"></span> Visited / Explored</div>
+                    <div class="tree-legend-pill"><span class="pill-dot dot-frontier"></span> Frontier Node</div>
+                    <div class="tree-legend-pill"><span class="pill-dot dot-pruned"></span> Start Pin</div>
+                    <div class="tree-legend-pill"><span class="pill-dot dot-goal"></span> Goal Pin</div>
+                    <div class="tree-legend-pill"><span class="pill-dot dot-obstacle"></span> Obstacle / Keep-Out</div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Application Script Module -->
-    <script type="module" src="js/app.js"></script>
+    <script type="module" src="js/app.js?v=9"></script>
 </body>
 </html>
